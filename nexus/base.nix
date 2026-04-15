@@ -1,0 +1,37 @@
+{ config, pkgs, ... }:
+
+{
+  # Bootloader
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+
+  # Hostname
+  networking.hostName = "nexus";
+  networking.networkmanager.enable = true;
+
+  # Sprache und Zeitzone
+  time.timeZone = "Europe/Berlin";
+  i18n.defaultLocale = "de_DE.UTF-8";
+
+  # Drucker
+  services.printing.enable = true;
+
+  # Audio mit Pipewire
+  services.pulseaudio.enable = false;
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+  };
+
+  # Unfree Pakete erlauben (brauchen wir für NVIDIA)
+  nixpkgs.config.allowUnfree = true;
+
+  # Flakes aktivieren
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+  system.stateVersion = "25.11";
+}
