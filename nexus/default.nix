@@ -4,10 +4,11 @@
   imports = [
     ./base.nix
     ./nvidia.nix
-    ./kde.nix
+    ./hyprland.nix
     ./users.nix
     ./software.nix
     ./gaming.nix
     ./ldap.nix
+    ./home.nix
   ];
 }

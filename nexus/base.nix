@@ -4,7 +4,7 @@
   # Bootloader
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages_6_12;
 
   # Hostname
   networking.hostName = "nexus";
@@ -32,6 +32,20 @@
 
   # Flakes aktivieren
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+  # Bluetooth
+  hardware.enableAllFirmware = true;
+  hardware.bluetooth.enable = true;
+  hardware.bluetooth.powerOnBoot = true;
+  boot.kernelModules = [ "btusb" ];
+
+  services.xserver.enable = true;
+
+  # Display Manager
+  services.displayManager.sddm = {
+    enable = true;
+    wayland.enable = true;
+  };
 
   system.stateVersion = "25.11";
 }

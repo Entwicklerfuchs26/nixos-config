@@ -1,42 +1,114 @@
 { config, pkgs, ... }:
 
 {
+  # flatpak
+  services.flatpak.enable = true;
+  xdg.portal.enable = true;
+
+
+  programs.kdeconnect.enable = true;
+  programs.firefox.enable = true;
+
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    pulse.enable = true;
+  };
+
   environment.systemPackages = with pkgs; [
     # Browser
-    firefox
+    vivaldi
 
-    # Editor
+    # Editor & Dokumente
     kdePackages.kate
-
-    # Terminal
-    kitty
+    libreoffice
+    kdePackages.okular
 
     # Dateiverwaltung
     kdePackages.dolphin
+    xarchiver
 
-    # Archivierung
-    kdePackages.ark
+    # Bildbetrachtung
+    kdePackages.gwenview
 
-    # Grafik
-    gimp
-    inkscape
-
-    # 3D
+    # Grafik & 3D
     blender
+    krita
+    freecad
+
+    # Media
+    vlc
+    handbrake
+    obs-studio
+    jellyfin-media-player
+
+    # Musik & Spaß
+    cava
+    cmatrix
 
     # Kommunikation
     discord
+
+    # Cloud & Sync
+    nextcloud-client
+
+    # Gaming
+    prismlauncher
+
+    # System
+    htop
+    fastfetch
+    pavucontrol
+    mission-center
+    openrgb
+    rpi-imager
+    matugen
+    ffmpeg
+
+    # VPN
+    # proton-vpn-gnome-desktop
+
+    # Clipboard
+    cliphist
+
+    # Passwörter & Sicherheit
+    bitwarden-desktop
+    gnome-keyring
+    seahorse
 
     # Entwicklung
     git
     wget
     curl
 
-    # System
-    htop
-    neofetch
+    # Schriften
+    nerd-fonts.jetbrains-mono
+    pavucontrol
+    pipewire
+    wireplumber
+    pulseaudio
+    wlogout
+
+    # GTK Theme & Icons
+    adw-gtk3
+    papirus-icon-theme
+    bibata-cursors
+    kdePackages.breeze
+    kdePackages.plasma-workspace-wallpapers
+    kdePackages.qqc2-breeze-style
+    kdePackages.plasma-integration
+    kdePackages.qqc2-breeze-style
+    papirus-folders
+
+    # Qt Theming
+    qt6Packages.qt6ct
+    kdePackages.breeze
+    libsForQt5.qt5ct
   ];
 
-  # Firefox als Programm aktivieren
-  programs.firefox.enable = true;
+  qt = {
+    enable = true;
+    platformTheme = "qt5ct";
+    style = "breeze";
+  };
 }

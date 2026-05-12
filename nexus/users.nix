@@ -14,6 +14,7 @@
       "audio"
       "video"
       "input"
+      "bluetooth"
     ];
     shell = pkgs.bash;
   };
