@@ -38,7 +38,7 @@
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
 
-  services.xserver.enable = true;
+#  services.xserver.enable = true;
 
   # Display Manager
 #  services.xserver.enable = true;
