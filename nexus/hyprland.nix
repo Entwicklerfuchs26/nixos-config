@@ -2,26 +2,27 @@
 
 let
   sddm-theme = pkgs.runCommand "sddm-astronaut-patched" {} ''
-    cp -r ${pkgs.sddm-astronaut}/share/sddm/themes/sddm-astronaut-theme $out
-    chmod -R +w $out
-    cat > $out/Themes/astronaut.conf << 'EOF'
-    [General]
-    Background=Backgrounds/astronaut.png
-    DimBackground=0.3
-    PartialBlur=true
-    FormPosition=center
-    HourFormat=HH:mm
-    DateFormat=dddd d. MMMM
-    Font=JetBrains Mono
-    RoundCorners=20
-    ForceLastUser=true
-    PasswordFocus=true
-    HideCompletePassword=true
-    TranslateLogin=Anmelden
-    TranslateReboot=Neustart
-    TranslateShutdown=Herunterfahren
-    TranslateSuspend=Ruhezustand
-    EOF
+    mkdir -p $out/share/sddm/themes
+    cp -r ${pkgs.sddm-astronaut}/share/sddm/themes/sddm-astronaut-theme $out/share/sddm/themes/
+    chmod -R +w $out/share/sddm/themes/sddm-astronaut-theme
+    cat > $out/share/sddm/themes/sddm-astronaut-theme/Themes/astronaut.conf << 'CONF'
+[General]
+Background=Backgrounds/astronaut.png
+DimBackground=0.3
+PartialBlur=true
+FormPosition=center
+HourFormat=HH:mm
+DateFormat=dddd d. MMMM
+Font=JetBrains Mono
+RoundCorners=20
+ForceLastUser=true
+PasswordFocus=true
+HideCompletePassword=true
+TranslateLogin=Anmelden
+TranslateReboot=Neustart
+TranslateShutdown=Herunterfahren
+TranslateSuspend=Ruhezustand
+CONF
   '';
 in
 
