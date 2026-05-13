@@ -42,4 +42,10 @@ services.udev.packages = [ pkgs.openrgb ];
 boot.kernelModules = [ "btusb" "i2c-dev" ];
 
   system.stateVersion = "25.11";
+
+users.groups.i2c = {};
+services.udev.extraRules = ''
+  KERNEL=="i2c-[0-9]*", GROUP="i2c", MODE="0660"
+'';
+
 }

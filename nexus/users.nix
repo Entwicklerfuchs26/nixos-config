@@ -15,6 +15,7 @@
       "video"
       "input"
       "bluetooth"
+      "i2c"
     ];
     shell = pkgs.bash;
   };
