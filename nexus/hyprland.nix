@@ -10,13 +10,7 @@
 services.displayManager.sddm = {
   enable = true;
   wayland.enable = true;
-  theme = "";
-  extraConfig = {
-    Theme = {
-      ThemeDir = "/etc/sddm-theme";
-      Current = "";
-  };
-};
+  theme = "sddm-astronaut-theme";
 };
 services.displayManager.defaultSession = "hyprland";
 
@@ -62,5 +56,23 @@ services.displayManager.defaultSession = "hyprland";
 environment.sessionVariables = {
 QML2_IMPORT_PATH = "${pkgs.qt6.qtmultimedia}/lib/qt-6/qml";
 };
+
+environment.etc."sddm/themes/sddm-astronaut-theme/theme.conf".source = pkgs.writeText "theme.conf" ''
+  [General]
+  Background="Backgrounds/current.png"
+  DimBackground="0.3"
+  PartialBlur="true"
+  FormPosition="center"
+  HourFormat="HH:mm"
+  DateFormat="dddd d. MMMM"
+  Font="JetBrains Mono"
+  RoundCorners="20"
+  ForceLastUser="true"
+  PasswordFocus="true"
+  TranslateLogin="Anmelden"
+  TranslateReboot="Neustart"
+  TranslateShutdown="Herunterfahren"
+  TranslateSuspend="Ruhezustand"
+'';
 
 }
