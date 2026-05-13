@@ -104,6 +104,7 @@
     qt6Packages.qt6ct
     kdePackages.breeze
     libsForQt5.qt5ct
+    imagemagick
   ];
 
   qt = {

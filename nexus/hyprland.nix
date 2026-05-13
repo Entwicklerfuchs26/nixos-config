@@ -10,7 +10,13 @@
 services.displayManager.sddm = {
   enable = true;
   wayland.enable = true;
-  theme = "sddm-astronaut-theme";
+  theme = "";
+  extraConfig = {
+    Theme = {
+      ThemeDir = "/etc/sddm-theme";
+      Current = "";
+  };
+};
 };
 services.displayManager.defaultSession = "hyprland";
 
