@@ -81,4 +81,4 @@ QML2_IMPORT_PATH = "${pkgs.qt6.qtmultimedia}/lib/qt-6/qml";
 };
 
 
-};
+}
