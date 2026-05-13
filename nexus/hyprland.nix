@@ -57,9 +57,9 @@ environment.sessionVariables = {
 QML2_IMPORT_PATH = "${pkgs.qt6.qtmultimedia}/lib/qt-6/qml";
 };
 
-environment.etc."sddm/themes/sddm-astronaut-theme/theme.conf".source = pkgs.writeText "theme.conf" ''
+environment.etc."sddm/themes/sddm-astronaut-theme/Themes/astronaut.conf".source = pkgs.writeText "astronaut.conf" ''
   [General]
-  Background="Backgrounds/current.png"
+  Background="Backgrounds/astronaut.png"
   DimBackground="0.3"
   PartialBlur="true"
   FormPosition="center"
@@ -69,6 +69,7 @@ environment.etc."sddm/themes/sddm-astronaut-theme/theme.conf".source = pkgs.writ
   RoundCorners="20"
   ForceLastUser="true"
   PasswordFocus="true"
+  HideCompletePassword="true"
   TranslateLogin="Anmelden"
   TranslateReboot="Neustart"
   TranslateShutdown="Herunterfahren"
