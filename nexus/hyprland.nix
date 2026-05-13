@@ -80,6 +80,7 @@ services.displayManager.defaultSession = "hyprland";
     sddm-astronaut
     kdePackages.kirigami
     kdePackages.qqc2-breeze-style
+    kdePackages.kirigami
   ];
 
 environment.sessionVariables = {
