@@ -1,5 +1,27 @@
 { config, pkgs,quickshell,awww, ... }:
 
+let
+  sddm-theme = pkgs.sddm-astronaut.override {
+    themeConfig = {
+      Background = "Backgrounds/astronaut.png";
+      PartialBlur = "true";
+      DimBackground = "0.3";
+      FormPosition = "center";
+      HourFormat = "HH:mm";
+      DateFormat = "dddd d. MMMM";
+      Font = "JetBrains Mono";
+      RoundCorners = "20";
+      ForceLastUser = "true";
+      PasswordFocus = "true";
+      HideCompletePassword = "true";
+      TranslateLogin = "Anmelden";
+      TranslateReboot = "Neustart";
+      TranslateShutdown = "Herunterfahren";
+      TranslateSuspend = "Ruhezustand";
+    };
+  };
+in
+
 {
   programs.hyprland = {
     enable = true;
@@ -11,10 +33,7 @@ services.displayManager.sddm = {
   enable = true;
   wayland.enable = true;
   theme = "sddm-astronaut-theme";
-  extraConfig = ''
-    [Theme]
-    ThemeDir=/etc/sddm/themes:/run/current-system/sw/share/sddm/themes
-  '';
+  extraPackages = [ sddm-theme ];
 };
 services.displayManager.defaultSession = "hyprland";
 
