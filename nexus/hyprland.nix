@@ -10,6 +10,7 @@
 services.displayManager.sddm = {
   enable = true;
   wayland.enable = true;
+  theme = "sddm-astronaut-theme";
 };
 services.displayManager.defaultSession = "hyprland";
 
@@ -48,6 +49,8 @@ services.displayManager.defaultSession = "hyprland";
     polkit_gnome
     quickshell.packages.x86_64-linux.default
     qt6.qtmultimedia
+    kdePackages.sddm-kcm
+    sddm-astronaut
   ];
 
 environment.sessionVariables = {
