@@ -38,16 +38,6 @@
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
 
-#  services.xserver.enable = true;
-
-  # Display Manager
-#  services.xserver.enable = true;
-#  services.displayManager.sddm = {
-#    enable = true;
-#    wayland.enable = true;
-#  };
-#  services.displayManager.defaultSession = "hyprland";
-
 services.udev.packages = [ pkgs.openrgb ];
 boot.kernelModules = [ "btusb" "i2c-dev" ];
 
