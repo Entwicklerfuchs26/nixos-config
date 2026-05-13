@@ -83,7 +83,7 @@ QML2_IMPORT_PATH = "${pkgs.qt6.qtmultimedia}/lib/qt-6/qml";
 environment.etc."sddm.conf.d/theme.conf".text = ''
   [Theme]
   Current=sddm-astronaut-theme
-  ThemeDir=/run/current-system/sw/share/sddm/themes
+  ThemeDir=/etc/sddm/themes:/run/current-system/sw/share/sddm/themes
   CursorTheme=Bibata-Modern-Classic
   CursorSize=24
 '';
