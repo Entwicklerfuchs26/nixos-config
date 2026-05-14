@@ -1,0 +1,83 @@
+{
+  "compositor": "hyprland",
+  "monitor": "",
+  "paths": {
+    "wallpaper": "~/Pictures/Wallpapers",
+    "videoWallpaper": "~/videowalls",
+    "cache": "",
+    "templates": "",
+    "scripts": "",
+    "steam": "",
+    "steamWorkshop": "",
+    "steamWeAssets": ""
+  },
+  "features": {
+    "matugen": true,
+    "ollama": false,
+    "steam": false,
+    "wallhaven": true
+  },
+  "colorSource": "magick",
+  "matugen": {
+    "schemeType": "scheme-fidelity"
+  },
+  "integrations": [
+    {
+      "name": "skwd-wall",
+      "template": "quickshell-colors.json",
+      "output": "colors.json"
+    },
+    {
+      "name": "kitty",
+      "template": "kitty.conf",
+      "output": "~/.config/kitty/skwd-theme.conf",
+      "reload": "pkill -USR1 kitty"
+    },
+    {
+      "name": "waybar",
+      "template": "waybar.css",
+      "output": "~/.config/waybar/style.css",
+      "reload": "pkill waybar; waybar &"
+    },
+    {
+      "name": "hyprland-borders",
+      "reload": "~/.config/matugen/apply-borders.sh"
+    },
+    {
+      "name": "cava",
+      "template": "cava.conf",
+      "output": "~/.config/cava/config",
+      "reload": "pkill -USR1 cava"
+    },
+    {
+      "name": "wlogout",
+      "template": "wlogout.css",
+      "output": "~/.config/wlogout/style.css"
+    },
+    {
+      "name": "nwg-dock",
+      "template": "nwg-dock.css",
+      "output": "~/.config/nwg-dock-hyprland/style.css",
+      "reload": "~/.config/skwd-wall/scripts/reload-dock.sh"
+    },
+    {
+      "name": "kdeglobals",
+      "template": "kdeglobals.conf",
+      "output": "~/.config/kdeglobals",
+      "reload": "~/.config/matugen/papirus-color.sh; if pgrep dolphin > /dev/null; then pkill dolphin; sleep 0.3; nohup sh -c 'QT_QPA_PLATFORMTHEME=kde dolphin' > /dev/null 2>&1 & fi"
+    },
+    {
+      "name": "openrgb",
+      "reload": "~/.config/matugen/openrgb-apply.sh"
+    }
+  ],
+  "components": {
+    "wallpaperSelector": {
+      "enabled": true,
+      "displayMode": "hex",
+      "hexRadius": 100,
+      "hexRows": 4
+    }
+  },
+  "wallpaperMute": true
+}

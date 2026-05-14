@@ -6,9 +6,10 @@
     home.stateVersion = "25.11";
     imports = [
       ./home/hyprland.nix
-#      ./home/waybar.nix
-#      ./home/kitty.nix
-#      ./home/matugen.nix
+      ./home/waybar.nix
+      ./home/kitty.nix
+      ./home/matugen.nix
+      ./home/skwd-wall.nix
     ];
     home.packages = with pkgs; [
       vivaldi

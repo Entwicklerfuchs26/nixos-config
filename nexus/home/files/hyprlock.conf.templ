@@ -1,0 +1,45 @@
+background {
+    monitor =
+    path = screenshot
+    blur_passes = 3
+    blur_size = 7
+    brightness = 0.6
+}
+
+label {
+    monitor =
+    text = cmd[update:1000] echo "$(date +"%H:%M")"
+    color = rgba({{colors.on_background.default.red}}, {{colors.on_background.default.green}}, {{colors.on_background.default.blue}}, 0.9)
+    font_size = 90
+    font_family = JetBrains Mono
+    position = 0, 100
+    halign = center
+    valign = center
+}
+
+label {
+    monitor =
+    text = cmd[update:1000] echo "$(date +"%A, %d. %B %Y")"
+    color = rgba({{colors.on_background.default.red}}, {{colors.on_background.default.green}}, {{colors.on_background.default.blue}}, 0.7)
+    font_size = 20
+    font_family = JetBrains Mono
+    position = 0, 10
+    halign = center
+    valign = center
+}
+
+input-field {
+    monitor =
+    size = 300, 50
+    outline_thickness = 2
+    dots_size = 0.3
+    dots_spacing = 0.2
+    outer_color = rgba({{colors.primary.default.red}}, {{colors.primary.default.green}}, {{colors.primary.default.blue}}, 0.8)
+    inner_color = rgba({{colors.surface.default.red}}, {{colors.surface.default.green}}, {{colors.surface.default.blue}}, 0.5)
+    font_color = rgba({{colors.on_surface.default.red}}, {{colors.on_surface.default.green}}, {{colors.on_surface.default.blue}}, 0.9)
+    fade_on_empty = true
+    placeholder_text = <i>Passwort...</i>
+    position = 0, -100
+    halign = center
+    valign = center
+}
