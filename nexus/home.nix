@@ -1,26 +1,25 @@
 { config, pkgs, ... }:
-
 {
   home-manager.users.fuchs = {
     home.username = "fuchs";
     home.homeDirectory = "/home/fuchs";
     home.stateVersion = "25.11";
-
-    # Persönliche Pakete nur für deinen Benutzer
+    imports = [
+      ./home/hyprland.nix
+      ./home/waybar.nix
+      ./home/kitty.nix
+      ./home/matugen.nix
+    ];
     home.packages = with pkgs; [
       vivaldi
       obsidian
       vscode
     ];
-
-    # Git Konfiguration für deinen Benutzer
     programs.git = {
       enable = true;
       userName = "Entwicklerfuchs26";
       userEmail = "jonas@hofpause.info";
     };
-
-    # Bash Konfiguration
     programs.bash = {
       enable = true;
       shellAliases = {
