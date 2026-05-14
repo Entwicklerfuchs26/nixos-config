@@ -1,0 +1,71 @@
+* {
+  font-family: "JetBrains Mono", monospace;
+  border: none;
+  outline: none;
+}
+
+window {
+  background: rgba({{colors.surface.default.red}}, {{colors.surface.default.green}}, {{colors.surface.default.blue}}, 0.5);
+}
+
+box {
+  background: transparent;
+}
+
+button {
+  background: rgba({{colors.surface.default.red}}, {{colors.surface.default.green}}, {{colors.surface.default.blue}}, 0.8);
+  color: {{colors.on_surface.default.hex}};
+  font-size: 14px;
+  border-radius: 16px;
+  margin: 200px 10px;
+  padding: 20px 40px;
+  transition: background 0.2s;
+}
+
+button:hover, button:focus {
+  background: rgba({{colors.primary.default.red}}, {{colors.primary.default.green}}, {{colors.primary.default.blue}}, 0.9);
+  color: {{colors.on_primary.default.hex}};
+}
+
+#lock {
+  background-image: url("/home/fuchs/.config/wlogout/icons/lock.png");
+  background-repeat: no-repeat;
+  background-position: center 30%;
+  background-size: 40px 40px;
+  padding-top: 80px;
+}
+#logout {
+  background-image: url("/home/fuchs/.config/wlogout/icons/logout.png");
+  background-repeat: no-repeat;
+  background-position: center 30%;
+  background-size: 40px 40px;
+  padding-top: 80px;
+}
+#suspend {
+  background-image: url("/home/fuchs/.config/wlogout/icons/suspend.png");
+  background-repeat: no-repeat;
+  background-position: center 30%;
+  background-size: 40px 40px;
+  padding-top: 80px;
+}
+#reboot {
+  background-image: url("/home/fuchs/.config/wlogout/icons/reboot.png");
+  background-repeat: no-repeat;
+  background-position: center 30%;
+  background-size: 40px 40px;
+  padding-top: 80px;
+}
+#shutdown {
+  background-image: url("/home/fuchs/.config/wlogout/icons/shutdown.png");
+  background-repeat: no-repeat;
+  background-position: center 30%;
+  background-size: 40px 40px;
+  padding-top: 80px;
+}
+#hibernate {
+  background-image: url("/home/fuchs/.config/wlogout/icons/hibernate.png");
+  background-repeat: no-repeat;
+  background-position: center 30%;
+  background-size: 40px 40px;
+  padding-top: 80px;
+}

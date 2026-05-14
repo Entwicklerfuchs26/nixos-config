@@ -1,0 +1,35 @@
+window {
+  background: rgba({{colors.surface.default.red}}, {{colors.surface.default.green}}, {{colors.surface.default.blue}}, 0.45);
+  border-radius: 24px;
+  border-style: none;
+  margin: 0px 8px;
+}
+#box {
+  padding: 4px 10px;
+}
+#active {
+  border-bottom: 3px solid {{colors.primary.default.hex}};
+}
+button, image {
+  background: none;
+  border-style: none;
+  box-shadow: none;
+}
+button {
+  padding: 6px;
+  margin: 0 3px;
+  border-radius: 14px;
+  transition: all 0.2s ease;
+}
+button:hover {
+  background: rgba({{colors.primary.default.red}}, {{colors.primary.default.green}}, {{colors.primary.default.blue}}, 0.25);
+  border-radius: 14px;
+}
+button:focus {
+  box-shadow: none;
+}
+.dot, .indicator {
+  opacity: 0;
+  min-height: 0;
+  min-width: 0;
+}

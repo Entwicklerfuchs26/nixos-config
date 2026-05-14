@@ -10,6 +10,7 @@
       ./home/kitty.nix
       ./home/matugen.nix
       ./home/skwd-wall.nix
+      ./home/desktop.nix
     ];
     home.packages = with pkgs; [
       vivaldi
