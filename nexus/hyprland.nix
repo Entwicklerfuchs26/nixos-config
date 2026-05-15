@@ -92,6 +92,7 @@ systemd.user.services.skwd-daemon = {
   description = "Skwd Daemon";
   wantedBy = [ "graphical-session.target" ];
   after = [ "graphical-session.target" ];
+  path = [ pkgs.ffmpeg pkgs.imagemagick ];
   serviceConfig = {
     ExecStart = "${skwd-daemon.packages.x86_64-linux.default}/bin/skwd-daemon";
     Restart = "on-failure";

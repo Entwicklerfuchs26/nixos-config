@@ -89,6 +89,22 @@
         "type": "github"
       }
     },
+    "nixpkgs_3": {
+      "locked": {
+        "lastModified": 1778443072,
+        "narHash": "sha256-zi7/fsqM/kFdNuED//4WOCUtezGtKKqRNORjMvfwjnA=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "da5ad661ba4e5ef59ba743f0d112cbc30e474f32",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "quickshell": {
       "inputs": {
         "nixpkgs": [
@@ -114,7 +130,8 @@
         "awww": "awww",
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs_2",
-        "quickshell": "quickshell"
+        "quickshell": "quickshell",
+        "skwd-daemon": "skwd-daemon"
       }
     },
     "rust-overlay": {
@@ -135,6 +152,24 @@
       "original": {
         "owner": "oxalica",
         "repo": "rust-overlay",
+        "type": "github"
+      }
+    },
+    "skwd-daemon": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_3"
+      },
+      "locked": {
+        "lastModified": 1778838344,
+        "narHash": "sha256-3BlRe4XsGqflV3cqrMvpsN2jyYawcdzd19tho+5yCFs=",
+        "owner": "liixini",
+        "repo": "skwd-daemon",
+        "rev": "a70000f2a3ea336a116180d7c6f8b472f07c6d3f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "liixini",
+        "repo": "skwd-daemon",
         "type": "github"
       }
     }
