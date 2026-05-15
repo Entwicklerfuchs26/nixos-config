@@ -1,4 +1,4 @@
-{ config, pkgs,quickshell,awww, ... }:
+{ config, pkgs,quickshell,awww,skwd-daemon, ... }:
 
 {
   programs.hyprland = {
@@ -54,6 +54,7 @@ services.displayManager.defaultSession = "hyprland";
     kdePackages.kirigami
     kdePackages.qqc2-breeze-style
     kdePackages.kirigami
+    skwd-daemon.packages.x86_64-linux.default
   ];
 
 environment.sessionVariables = {
@@ -86,5 +87,15 @@ environment.etc."sddm/themes/sddm-astronaut-theme/Themes/astronaut.conf".text = 
   TranslateShutdown="Herunterfahren"
   TranslateSuspend="Ruhezustand"
 '';
+
+systemd.user.services.skwd-daemon = {
+  description = "Skwd Daemon";
+  wantedBy = [ "graphical-session.target" ];
+  after = [ "graphical-session.target" ];
+  serviceConfig = {
+    ExecStart = "${skwd-daemon.packages.x86_64-linux.default}/bin/skwd-daemon";
+    Restart = "on-failure";
+  };
+};
 
 }

@@ -14,12 +14,15 @@
    awww = {
      url = "git+https://codeberg.org/LGFae/awww";
    };
+   skwd-daemon = {
+     url = "github:liixini/skwd-daemon";
+   }; 
  };
 
- outputs = {self, nixpkgs, home-manager,quickshell,awww, ... }: {
+ outputs = {self, nixpkgs, home-manager,quickshell,awww, skwd-daemon, ... }: {
    nixosConfigurations.nexus = nixpkgs.lib.nixosSystem {
      system = "x86-64-linux";
-     specialArgs = {inherit quickshell awww;};
+     specialArgs = {inherit quickshell awww skwd-daemon;};
      modules = [
        ./hardware-configuration.nix
        ./nexus/default.nix
