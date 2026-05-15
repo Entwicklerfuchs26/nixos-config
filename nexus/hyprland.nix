@@ -55,6 +55,7 @@ services.displayManager.defaultSession = "hyprland";
     kdePackages.qqc2-breeze-style
     kdePackages.kirigami
     skwd-daemon.packages.x86_64-linux.default
+    qt6.qtimageformats
   ];
 
 environment.sessionVariables = {
