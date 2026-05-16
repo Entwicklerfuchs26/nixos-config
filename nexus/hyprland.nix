@@ -91,7 +91,7 @@ environment.etc."sddm/themes/sddm-astronaut-theme/Themes/astronaut.conf".text = 
 
 systemd.user.services.skwd-daemon = {
   description = "Skwd Daemon";
-  wantedBy = [];
+  wantedBy = [ "graphical-session.target" ];
   after = [ "graphical-session.target" ];
   path = [ pkgs.ffmpeg pkgs.imagemagick pkgs.matugen awww.packages.${pkgs.system}.default ];
   serviceConfig = {
