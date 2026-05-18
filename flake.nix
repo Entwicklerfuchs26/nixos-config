@@ -17,16 +17,20 @@
    skwd-daemon = {
      url = "github:liixini/skwd-daemon";
    }; 
+   skwd-wall = {
+     url = "github:liixini/skwd-wall";
+   };
  };
 
- outputs = {self, nixpkgs, home-manager,quickshell,awww, skwd-daemon, ... }: {
+outputs = {self, nixpkgs, home-manager, quickshell, awww, skwd-daemon, skwd-wall, ... }: {
    nixosConfigurations.nexus = nixpkgs.lib.nixosSystem {
      system = "x86-64-linux";
-     specialArgs = {inherit quickshell awww skwd-daemon;};
+     specialArgs = {inherit quickshell awww skwd-daemon skwd-wall;};   
      modules = [
        ./hardware-configuration.nix
        ./nexus/default.nix
        home-manager.nixosModules.home-manager
+       skwd-wall.nixosModules.default
      ];
    };
  };

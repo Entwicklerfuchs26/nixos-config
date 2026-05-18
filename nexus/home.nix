@@ -4,6 +4,9 @@
     home.username = "fuchs";
     home.homeDirectory = "/home/fuchs";
     home.stateVersion = "25.11";
+    home.sessionVariables = {
+      PATH = "$HOME/.local/bin:$PATH";
+    };
     imports = [
       ./home/hyprland.nix
       ./home/waybar.nix
@@ -16,6 +19,7 @@
       vivaldi
       obsidian
       vscode
+      matugen
     ];
     programs.git = {
       enable = true;

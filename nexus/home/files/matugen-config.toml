@@ -4,8 +4,8 @@ reload_apps = true
 input_path = "/home/fuchs/.config/waybar/style.css.templ"
 output_path = "/home/fuchs/.config/waybar/style.css"
 [templates.colors]
-input_path = "~/.config/matugen/colors.sh.templ"
-output_path = "~/.config/matugen/colors.sh"
+input_path = "/home/fuchs/.config/matugen/colors.sh.templ"
+output_path = "/home/fuchs/.config/matugen/colors.sh"
 [templates.wlogout]
 input_path = "/home/fuchs/.config/wlogout/style.css.templ"
 output_path = "/home/fuchs/.config/wlogout/style.css"

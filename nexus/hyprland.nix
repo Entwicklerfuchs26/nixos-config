@@ -1,4 +1,4 @@
-{ config, pkgs,quickshell,awww,skwd-daemon, ... }:
+{ config, pkgs, lib, quickshell, awww, skwd-daemon, ... }:
 
 {
   programs.hyprland = {
@@ -89,15 +89,7 @@ environment.etc."sddm/themes/sddm-astronaut-theme/Themes/astronaut.conf".text = 
   TranslateSuspend="Ruhezustand"
 '';
 
-systemd.user.services.skwd-daemon = {
-  description = "Skwd Daemon";
-  wantedBy = [ "graphical-session.target" ];
-  after = [ "graphical-session.target" ];
-  path = [ pkgs.ffmpeg pkgs.imagemagick pkgs.matugen awww.packages.${pkgs.system}.default ];
-  serviceConfig = {
-    ExecStart = "${skwd-daemon.packages.x86_64-linux.default}/bin/skwd-daemon";
-    Restart = "on-failure";
-  };
-};
+
+programs.skwd-wall.enable = true;
 
 }

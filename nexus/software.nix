@@ -99,6 +99,7 @@
     kdePackages.plasma-integration
     kdePackages.qqc2-breeze-style
     papirus-folders
+    gtk3
 
     # Qt Theming
     qt6Packages.qt6ct
