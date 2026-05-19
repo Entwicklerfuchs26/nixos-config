@@ -6,4 +6,5 @@
   home.file.".config/gtk-3.0/settings.ini".source = ./files/gtk3-settings.ini;
   home.file.".config/gtk-4.0/settings.ini".source = ./files/gtk4-settings.ini;
   home.file.".icons/default/index.theme".source = ./files/cursor-index.theme;
+  home.file.".config/qt5ct/qt5ct.conf".source = ./files/qt5ct.conf;
 }

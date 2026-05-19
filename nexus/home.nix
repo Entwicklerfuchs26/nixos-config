@@ -12,7 +12,6 @@
       ./home/waybar.nix
       ./home/kitty.nix
       ./home/matugen.nix
-      ./home/skwd-wall.nix
       ./home/desktop.nix
     ];
     home.packages = with pkgs; [
@@ -23,8 +22,8 @@
     ];
     programs.git = {
       enable = true;
-      userName = "Entwicklerfuchs26";
-      userEmail = "jonas@hofpause.info";
+       settings.user.name = "Entwicklerfuchs26";
+       settings.user.email = "jonas@hofpause.info";
     };
     programs.bash = {
       enable = true;

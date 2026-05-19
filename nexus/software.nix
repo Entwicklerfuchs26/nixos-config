@@ -6,14 +6,8 @@
   xdg.portal.enable = true;
 
 
-  programs.kdeconnect.enable = true;
   programs.firefox.enable = true;
 
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    pulse.enable = true;
-  };
 
   environment.systemPackages = with pkgs; [
     # Browser
@@ -83,7 +77,6 @@
 
     # Schriften
     nerd-fonts.jetbrains-mono
-    pavucontrol
     pipewire
     wireplumber
     pulseaudio
@@ -94,8 +87,6 @@
     papirus-icon-theme
     bibata-cursors
     kdePackages.breeze
-    kdePackages.plasma-workspace-wallpapers
-    kdePackages.qqc2-breeze-style
     kdePackages.plasma-integration
     kdePackages.qqc2-breeze-style
     papirus-folders
@@ -103,7 +94,6 @@
 
     # Qt Theming
     qt6Packages.qt6ct
-    kdePackages.breeze
     libsForQt5.qt5ct
     imagemagick
   ];
