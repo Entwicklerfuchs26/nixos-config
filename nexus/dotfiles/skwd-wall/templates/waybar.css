@@ -1,0 +1,81 @@
+* {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  border: none;
+  border-radius: 0;
+}
+
+window#waybar {
+  background: transparent;
+  color: {{colors.on_surface.default.hex}};
+}
+
+window#waybar > box {
+  background: rgba({{colors.surface.default.red}}, {{colors.surface.default.green}}, {{colors.surface.default.blue}}, 0.45);
+  border-radius: 24px;
+  margin: 6px 8px;
+  padding: 1px;
+}
+
+.modules-left {
+  background: rgba({{colors.surface.default.red}}, {{colors.surface.default.green}}, {{colors.surface.default.blue}}, 0.85);
+  border-radius: 20px;
+  margin: 0 2px 0 0;
+  padding: 0 4px;
+}
+
+.modules-right {
+  background: rgba({{colors.surface.default.red}}, {{colors.surface.default.green}}, {{colors.surface.default.blue}}, 0.85);
+  border-radius: 20px;
+  margin: 0 0 0 2px;
+  padding: 0 4px;
+}
+
+.modules-center {
+  background: transparent;
+  margin: 0;
+  padding: 0;
+}
+
+#workspaces button {
+  padding: 0 4px;
+  min-width: 16px;
+  color: {{colors.on_surface_variant.default.hex}};
+  border-radius: 12px;
+  margin: 2px 0px;
+}
+
+#workspaces button.active {
+  color: {{colors.primary.default.hex}};
+  background: rgba({{colors.primary.default.red}}, {{colors.primary.default.green}}, {{colors.primary.default.blue}}, 0.20);
+}
+
+#clock {
+  color: {{colors.on_surface.default.hex}};
+  font-weight: bold;
+  padding: 0 16px;
+  background: rgba({{colors.surface.default.red}}, {{colors.surface.default.green}}, {{colors.surface.default.blue}}, 0.85);
+  border-radius: 20px;
+  margin: 0;
+}
+
+#pulseaudio, #bluetooth, #network, #tray {
+  padding: 0 8px;
+  color: {{colors.on_surface_variant.default.hex}};
+}
+
+#custom-launcher {
+  color: {{colors.primary.default.hex}};
+  padding: 0 12px;
+  font-size: 16px;
+}
+
+#custom-power {
+  color: {{colors.primary.default.hex}};
+  padding: 0 12px;
+}
+
+#custom-controlcenter {
+  color: {{colors.secondary.default.hex}};
+  padding: 0 12px;
+}
