@@ -31,7 +31,13 @@
         rebuild = "sudo nixos-rebuild switch --flake /etc/nixos#nexus";
         update = "sudo nix flake update /etc/nixos";
         config = "cd /etc/nixos";
+        ssh = "TERM=xterm-256color ssh -t";
       };
+      initExtra = ''
+        if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
+          export TERM=xterm-256color
+       fi
+      '';
     };
   };
 }
