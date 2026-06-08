@@ -10,5 +10,7 @@
     ./gaming.nix
     ./ldap.nix
     ./home.nix
+    ./davinci.nix
+    ./printing.nix
   ];
 }

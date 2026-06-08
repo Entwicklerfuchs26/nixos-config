@@ -1,0 +1,8 @@
+configuration {
+    modes: "drun";
+    show-icons: true;
+    drun-display-format: "{name}";
+}
+
+@theme "/home/fuchs/.config/rofi/theme.rasi"
+

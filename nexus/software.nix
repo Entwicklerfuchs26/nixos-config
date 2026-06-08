@@ -20,6 +20,7 @@
 
     # Dateiverwaltung
     kdePackages.dolphin
+    kdePackages.ark
     xarchiver
 
     # Bildbetrachtung
@@ -42,6 +43,8 @@
 
     # Kommunikation
     discord
+    vesktop
+
 
     # Cloud & Sync
     nextcloud-client
@@ -91,6 +94,8 @@
     kdePackages.qqc2-breeze-style
     papirus-folders
     gtk3
+    pwvucontrol
+    rofi
 
     # Qt Theming
     qt6Packages.qt6ct

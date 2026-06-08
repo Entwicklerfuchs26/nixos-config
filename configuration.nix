@@ -135,4 +135,36 @@
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "25.11"; # Did you read the comment?
 
+  systemd.user.services.skwd-daemon = {
+    description = "SKWD Wallpaper Hyperion Sync";
+    wantedBy = [ "default.target" ];
+    serviceConfig = {
+      ExecStart = "/nix/store/pdh3rwrllm55by5q7riyn7dxz3iydaqi-skwd-daemon-unstable/bin/skwd-daemon";
+      Restart = "on-failure";
+      RestartSec = "3s";
+    };
+  };
+
+    systemd.user.services.hyperion-mqtt-listener = {
+      description = "Hyperion MQTT Listener";
+      wantedBy = [ "default.target" ];
+      after = [ "network.target" ];
+      serviceConfig = {
+        ExecStart = "/home/fuchs/.local/bin/hyperion-mqtt-listener.sh";
+        Restart = "always";
+        RestartSec = "5s";
+      };
+    };
+
+# Feste IP
+  networking.interfaces.enp5s0.ipv4.addresses = [{
+    address = "192.168.1.40";
+    prefixLength = 24;
+  }];
+  networking.defaultGateway = "192.168.1.1";
+  networking.nameservers = [ "192.168.1.1" ];
+
+  # Wake-on-LAN
+  networking.interfaces.enp5s0.wakeOnLan.enable = true;
+
 }

@@ -8,7 +8,22 @@
 
   # Hostname
   networking.hostName = "nexus";
-  networking.networkmanager.enable = true;
+    networking.networkmanager.enable = true;
+    networking.interfaces.enp5s0 = {
+      wakeOnLan.enable = true;
+    };
+
+  security.sudo.extraRules = [{
+    users = [ "fuchs" ];
+    commands = [{
+      command = "/run/current-system/sw/bin/shutdown";
+      options = [ "NOPASSWD" ];
+    }];
+  }];
+
+  #ssh
+  services.openssh.enable = true;
+  services.openssh.settings.PasswordAuthentication = true;
 
   # Sprache und Zeitzone
   time.timeZone = "Europe/Berlin";

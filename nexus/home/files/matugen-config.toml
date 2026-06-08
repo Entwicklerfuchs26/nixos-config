@@ -18,3 +18,6 @@ output_path = "/home/fuchs/.config/kdeglobals"
 [templates.hyprlock]
 input_path = "/home/fuchs/.config/matugen/hyprlock.conf.templ"
 output_path = "/home/fuchs/.config/hypr/hyprlock.conf"
+[templates.rofi]
+input_path = "/home/fuchs/.config/rofi/theme.rasi.templ"
+output_path = "/home/fuchs/.config/rofi/theme.rasi"

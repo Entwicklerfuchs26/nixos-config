@@ -44,6 +44,8 @@
 "pulseaudio": {
   "format": "🔊 {volume}%",
   "format-muted": "🔇",
+  "on-click": "pwvucontrol",
+  "on-click-right": "pavucontrol",
   "on-scroll-up": "pactl set-sink-volume @DEFAULT_SINK@ +5%",
   "on-scroll-down": "pactl set-sink-volume @DEFAULT_SINK@ -5%"
 },
