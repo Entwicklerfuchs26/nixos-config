@@ -30,7 +30,9 @@ programs.obs-studio = {
     kdePackages.okular
 
     # Dateiverwaltung
-    kdePackages.dolphin
+    nautilus
+    nautilus-python
+    file-roller
     kdePackages.ark
     xarchiver
 

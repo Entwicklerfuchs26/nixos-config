@@ -14,7 +14,7 @@
       ./home/matugen.nix
       ./home/desktop.nix
       ./home/rofi.nix
-      ./home/mimeapps.nix
+      ./mimeapps.nix
     ];
     home.packages = with pkgs; [
       vivaldi
