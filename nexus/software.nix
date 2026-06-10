@@ -8,6 +8,13 @@
 
   programs.firefox.enable = true;
 
+programs.obs-studio = {
+    enable = true;
+    enableVirtualCamera = true;
+    plugins = with pkgs.obs-studio-plugins; [
+      droidcam-obs
+    ];
+  };
 
   environment.systemPackages = with pkgs; [
     # Browser
@@ -34,7 +41,6 @@
     # Media
     vlc
     handbrake
-    obs-studio
     jellyfin-media-player
 
     # Musik & Spaß

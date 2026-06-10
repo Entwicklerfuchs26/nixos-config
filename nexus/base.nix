@@ -25,6 +25,13 @@
   services.openssh.enable = true;
   services.openssh.settings.PasswordAuthentication = true;
 
+  # Trusted CA (Sternenhof Root CA)
+  security.pki.certificateFiles = [ ./certs/sternenhof-ca-2026.crt ];
+
+  networking.hosts = {
+      "192.168.1.26" = [ "cloud.sternenhof.space" ];
+    };
+
   # Sprache und Zeitzone
   time.timeZone = "Europe/Berlin";
   i18n.defaultLocale = "de_DE.UTF-8";
