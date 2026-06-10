@@ -3,7 +3,11 @@
 {
   # flatpak
   services.flatpak.enable = true;
-  xdg.portal.enable = true;
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-hyprland ];
+    config.common.default = "*";
+  };
 
 
   programs.firefox.enable = true;
@@ -107,6 +111,10 @@ programs.obs-studio = {
     qt6Packages.qt6ct
     libsForQt5.qt5ct
     imagemagick
+ 
+    shared-mime-info
+    xdg-utils
+
   ];
 
   qt = {
