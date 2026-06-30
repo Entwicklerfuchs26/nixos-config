@@ -212,6 +212,7 @@ def capture_frame():
 
 
 def detect_mode() -> str:
+    has_music = False
     try:
         r = subprocess.run(['hyprctl', 'clients', '-j'], capture_output=True, text=True, timeout=2)
         for c in json.loads(r.stdout):
@@ -219,14 +220,18 @@ def detect_mode() -> str:
                 continue
             cls   = c.get('class', '').lower()
             title = c.get('title', '').lower()
+            # Video hat Vorrang — sofort zurück
             if cls in JELLY_CLASSES:
                 return 'video'
             if cls in VIDEO_CLASSES and any(site in title for site in VIDEO_TITLES):
                 return 'video'
             if any(sub in cls for sub in MUSIC_CLS_SUB):
-                return 'music'
+                has_music = True
     except Exception:
         pass
+
+    if has_music:
+        return 'music'
 
     try:
         r = subprocess.run(['playerctl', 'status'], capture_output=True, text=True, timeout=2)
