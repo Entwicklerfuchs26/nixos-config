@@ -193,10 +193,11 @@ def lerp(a, b, t):
     return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
 
-def capture_frame():
+def _capture_once() -> bytes | None:
     try:
+        # JPEG + Compositor-seitige Skalierung → viel schneller als PNG
         r = subprocess.run(
-            ['grim', '-o', MAIN_MONITOR, '-t', 'png', TMP_CAP],
+            ['grim', '-o', MAIN_MONITOR, '-s', '0.0833', '-t', 'jpeg', TMP_CAP],
             capture_output=True, timeout=2,
         )
         if r.returncode != 0:
@@ -212,6 +213,35 @@ def capture_frame():
         return data if len(data) == CAP_W * CAP_H * 3 else None
     except Exception:
         return None
+
+
+class ScreenCapture:
+    """Nimmt Frames im Hintergrund auf — Hauptschleife holt immer den neuesten."""
+    def __init__(self):
+        self._frame  = None
+        self._lock   = threading.Lock()
+        self._stop   = False
+        self._thread = None
+
+    def start(self):
+        self._stop = False
+        self._thread = threading.Thread(target=self._loop, daemon=True)
+        self._thread.start()
+
+    def _loop(self):
+        while not self._stop:
+            frame = _capture_once()
+            if frame:
+                with self._lock:
+                    self._frame = frame
+
+    def get(self) -> bytes | None:
+        with self._lock:
+            return self._frame
+
+    def stop(self):
+        self._stop = True
+        self._frame = None
 
 
 def detect_mode() -> str:
@@ -251,16 +281,25 @@ def detect_mode() -> str:
 def main():
     hyp          = HyperionClient()
     cava         = CavaReader()
+    cap          = ScreenCapture()
     colors       = parse_colors()
     prev         = colors.get('PRIMARY', (80, 120, 255))
     target       = prev
     colors_mtime = 0.0
     transition_t = 0.0
-    TRANSITION_DUR = 2.0
-    last_mode    = 'idle'
+    TRANSITION_DUR  = 2.0
+    MODE_CHECK_INT  = 2.0   # detect_mode() nur alle 2s
+    last_mode       = 'idle'
+    mode            = 'idle'
+    last_mode_check = 0.0
 
     while True:
         now = time.monotonic()
+
+        # Modus nur alle 2s neu prüfen (hyprctl ist langsam)
+        if now - last_mode_check >= MODE_CHECK_INT:
+            mode            = detect_mode()
+            last_mode_check = now
 
         # wallpaper color change
         try:
@@ -278,29 +317,32 @@ def main():
         t_blend      = min(1.0, (now - transition_t) / TRANSITION_DUR) if transition_t else 1.0
         active_color = lerp(prev, target, t_blend)
 
-        mode = detect_mode()
-
         if mode == 'video':
-            if last_mode == 'music':
-                cava.stop()
-            frame = capture_frame()
+            if last_mode != 'video':
+                if last_mode == 'music':
+                    cava.stop()
+                cap.start()
+            frame = cap.get()
             if frame:
                 hyp.image(frame)
             time.sleep(0.1)
 
         elif mode == 'music':
             if last_mode != 'music':
+                cap.stop()
                 cava.start()
             br = cava.brightness
             hyp.color(*(int(v * br) for v in active_color))
             time.sleep(0.033)
 
         else:
-            if last_mode == 'music':
-                cava.stop()
             if last_mode != 'idle':
+                cap.stop()
+                cava.stop()
                 hyp.clear()
             time.sleep(0.5)
+
+        last_mode = mode
 
         last_mode = mode
 
