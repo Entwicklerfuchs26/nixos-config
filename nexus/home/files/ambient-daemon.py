@@ -196,8 +196,9 @@ def lerp(a, b, t):
 def _capture_once() -> bytes | None:
     try:
         # JPEG + Compositor-seitige Skalierung → viel schneller als PNG
+        # Kein -o: capturt alle Monitore zusammen (funktioniert aus systemd-Kontext)
         r = subprocess.run(
-            ['grim', '-o', MAIN_MONITOR, '-s', '0.0833', '-t', 'jpeg', TMP_CAP],
+            ['grim', '-s', '0.0833', '-t', 'jpeg', TMP_CAP],
             capture_output=True, timeout=2,
         )
         if r.returncode != 0:
