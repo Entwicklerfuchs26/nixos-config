@@ -1,0 +1,95 @@
+;; Poll: System Stats
+
+(deflisten cpu_val :initial "0"
+  `bash ~/.config/eww/scripts/cpu.sh`)
+
+(defpoll ram_val :interval "2s" :initial "0"
+  `free | awk 'NR==2 {printf "%.0f", $3/$2*100}'`)
+
+(defpoll gpu_val :interval "2s" :initial "0"
+  `nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits | tr -d ' \n'`)
+
+(defpoll vram_val :interval "2s" :initial "0"
+  `nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader,nounits | awk -F', ' '{printf "%.0f", $1/$2*100}'`)
+
+;; Listen: Network Speed
+
+(deflisten net_rx :initial "0"
+  `bash ~/.config/eww/scripts/net-rx.sh`)
+
+(deflisten net_tx :initial "0"
+  `bash ~/.config/eww/scripts/net-tx.sh`)
+
+;; Widget: Circular Gauge
+
+(defwidget gauge [label value css]
+  (box :class "gauge-box" :orientation "v" :space-evenly false :spacing 8 :halign "center"
+    (label :class "gauge-label" :text label)
+    (overlay
+      (circular-progress
+        :class "gauge-ring ${css}"
+        :value value
+        :thickness 12
+        :clockwise true)
+      (box :class "gauge-center" :orientation "v" :space-evenly false
+           :valign "center" :halign "center"
+        (label :class "gauge-value" :text "${value}%")))))
+
+;; Widget: Network Graph
+
+(defwidget net-widget []
+  (box :class "net-box" :orientation "v" :space-evenly false :spacing 8 :valign "center"
+    (box :orientation "h" :space-evenly false :spacing 0 :halign "center"
+      (label :class "net-label" :text "NETZWERK   ")
+      (label :class "net-speed-down" :text "↓ ${net_rx} KB/s   ")
+      (label :class "net-speed-up"   :text "↑ ${net_tx} KB/s"))
+    (graph
+      :class "net-graph"
+      :value net_rx
+      :time-range 120
+      :min 0
+      :dynamic true
+      :line-style "round"
+      :thickness 2
+      :width 340
+      :height 110)))
+
+;; Widget: Media Picker
+
+(defwindow media-picker
+  :monitor 0
+  :geometry (geometry :x "0px" :y "0px" :anchor "center")
+  :stacking "overlay"
+  :exclusive false
+  :focusable false
+  (box :class "media-pill" :orientation "h" :space-evenly false :spacing 0 :valign "center" :halign "center"
+    (button :class "media-btn" :onclick "eww close media-picker; hyprctl dispatch submap reset; vivaldi --app=https://www.crunchyroll.com --class=media-crunchyroll &"
+      (label :text "Crunchyroll"))
+    (button :class "media-btn" :onclick "eww close media-picker; hyprctl dispatch submap reset; ~/.local/bin/media-picker &"
+      (label :text "Aniworld"))
+    (button :class "media-btn" :onclick "eww close media-picker; hyprctl dispatch submap reset; vivaldi --app=https://music.apple.com --class=media-applemusic &"
+      (label :text "Apple Musik"))
+    (button :class "media-btn" :onclick "eww close media-picker; hyprctl dispatch submap reset; jellyfinmediaplayer &"
+      (label :text "Jellyfin"))
+    (button :class "media-btn" :onclick "eww close media-picker; hyprctl dispatch submap reset; vivaldi --app=https://www.youtube.com --class=media-youtube &"
+      (label :text "YouTube"))))
+
+;; Window: Sysmon
+
+(defwindow sysmon
+  :monitor 0
+  :geometry (geometry
+    :x "24px"
+    :y "24px"
+    :anchor "bottom right")
+  :stacking "bottom"
+  :exclusive false
+  :focusable false
+  (box :class "sysmon-win" :orientation "h" :space-evenly false
+       :spacing 20 :valign "center"
+    (gauge :label "CPU"  :value cpu_val  :css "cpu")
+    (gauge :label "RAM"  :value ram_val  :css "ram")
+    (gauge :label "GPU"  :value gpu_val  :css "gpu")
+    (gauge :label "VRAM" :value vram_val :css "vram")
+    (box :class "net-sep" :width 1)
+    (net-widget)))

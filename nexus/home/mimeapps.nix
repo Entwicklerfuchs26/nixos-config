@@ -18,6 +18,8 @@ xdg.mimeApps = {
     "image/jpeg"                  = "org.kde.gwenview.desktop";
     "image/webp"                  = "org.kde.gwenview.desktop";
     "image/gif"                   = "org.kde.gwenview.desktop";
+    "image/x-nikon-nef" = [ "org.kde.gwenview.desktop" "darktable.desktop" ];
+    "image/x-raw"       = [ "org.kde.gwenview.desktop" "darktable.desktop" ];
     "image/tiff"                  = "org.kde.gwenview.desktop";
     # Krita
     "image/x-krita"               = "org.kde.krita.desktop";

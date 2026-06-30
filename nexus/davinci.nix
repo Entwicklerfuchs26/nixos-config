@@ -16,10 +16,10 @@
     runtimeInputs = [ pkgs.ffmpeg ];
     text = ''
       shopt -s nullglob nocaseglob
-      files=( *.mp4 )
+      files=( *.mp4 *.mkv )
 
       if [ ''${#files[@]} -eq 0 ]; then
-        echo "Keine .mp4-Dateien im aktuellen Ordner gefunden."
+        echo "Keine .mp4/.mkv-Dateien im aktuellen Ordner gefunden."
         exit 1
       fi
 

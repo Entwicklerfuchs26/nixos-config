@@ -36,6 +36,9 @@ programs.obs-studio = {
     kdePackages.ark
     xarchiver
 
+    # Vorschaubilder in Nautilus (Video, Dokumente)
+    ffmpegthumbnailer
+
     # Bildbetrachtung
     kdePackages.gwenview
 
@@ -43,6 +46,7 @@ programs.obs-studio = {
     blender
     krita
     freecad
+    darktable
 
     # Media
     vlc
@@ -54,7 +58,6 @@ programs.obs-studio = {
     cmatrix
 
     # Kommunikation
-    discord
     vesktop
 
 
@@ -75,7 +78,7 @@ programs.obs-studio = {
     ffmpeg
 
     # VPN
-    # proton-vpn-gnome-desktop
+    proton-vpn-gnome-desktop
 
     # Clipboard
     cliphist
@@ -117,6 +120,18 @@ programs.obs-studio = {
     shared-mime-info
     xdg-utils
 
+    # iPhone
+    libimobiledevice
+    ifuse
+
+    # Widgets
+    eww
+
+    # KI / AI
+    claude-code
+
+    # Python-Pakete (PyPI)
+    pipx
   ];
 
   qt = {

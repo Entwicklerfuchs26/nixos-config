@@ -21,6 +21,7 @@
       obsidian
       vscode
       matugen
+      (pkgs.callPackage ./pkgs/aniworld.nix { })
     ];
     programs.git = {
       enable = true;

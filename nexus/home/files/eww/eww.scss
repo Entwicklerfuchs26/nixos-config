@@ -1,0 +1,112 @@
+* {
+  all: unset;
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 12px;
+}
+
+.sysmon-win {
+  background: rgba(13, 26, 17, 0.92);
+  border-radius: 18px;
+  padding: 18px 22px;
+  border: 1px solid rgba(64, 145, 108, 0.38);
+}
+
+/* Gauges */
+
+.gauge-box {
+  min-width: 116px;
+}
+
+.gauge-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(149, 184, 160, 0.85);
+  letter-spacing: 1.5px;
+}
+
+circular-progress {
+  min-width: 100px;
+  min-height: 100px;
+  background: rgba(27, 51, 41, 0.75);
+  border-radius: 9999px;
+}
+
+circular-progress.cpu  { color: #89b4fa; }
+circular-progress.ram  { color: #40916c; }
+circular-progress.gpu  { color: #f38ba8; }
+circular-progress.vram { color: #fab387; }
+
+.gauge-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #e0ebe4;
+}
+
+/* Trennlinie */
+
+.net-sep {
+  background: rgba(64, 145, 108, 0.28);
+  margin: 6px 2px;
+}
+
+/* Netzwerk */
+
+.net-box {
+  min-width: 360px;
+}
+
+.net-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(149, 184, 160, 0.85);
+  letter-spacing: 1.5px;
+}
+
+.net-speed-down {
+  font-size: 12px;
+  font-weight: 600;
+  color: #89dceb;
+}
+
+.net-speed-up {
+  font-size: 12px;
+  font-weight: 600;
+  color: #cba6f7;
+}
+
+.net-graph {
+  color: #89dceb;
+  background: rgba(27, 51, 41, 0.65);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+/* Media Picker */
+
+.media-pill {
+  background-color: rgba(13, 26, 17, 0.95);
+  border-radius: 18px;
+  padding: 14px 18px;
+  border: 1px solid rgba(64, 145, 108, 0.45);
+}
+
+.media-btn {
+  background-color: rgba(64, 145, 108, 0.12);
+  border-radius: 12px;
+  padding: 10px 22px;
+  margin: 0 4px;
+}
+
+.media-btn label {
+  color: #b8d4c0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.media-btn:hover {
+  background-color: rgba(64, 145, 108, 0.5);
+}
+
+.media-btn:hover label {
+  color: #ffffff;
+}

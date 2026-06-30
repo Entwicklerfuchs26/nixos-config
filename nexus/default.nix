@@ -12,5 +12,6 @@
     ./home.nix
     ./davinci.nix
     ./printing.nix
+    ./ollama.nix
   ];
 }
