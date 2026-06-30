@@ -180,12 +180,26 @@ class HyperionClient:
         })
 
 
+def _openrgb_fetch_led_counts():
+    """Einmalige CLI-Abfrage der LED-Anzahl (vor Socket-Verbindung aufrufen!)."""
+    try:
+        r = subprocess.run(['openrgb', '--list-devices'],
+                           capture_output=True, text=True, timeout=10)
+        counts = []
+        for line in r.stdout.splitlines():
+            if line.strip().startswith('LEDs:'):
+                counts.append(len(re.findall(r"'[^']*'", line)))
+        return counts
+    except Exception:
+        return []
+
+
 class OpenRGBClient:
     """Persistente Verbindung zum OpenRGB-Server, setzt alle Geräte auf eine Farbe."""
 
-    def __init__(self):
+    def __init__(self, led_counts):
         self._sock    = None
-        self._devices = []   # LED-Anzahl pro Gerät
+        self._devices = led_counts   # LED-Anzahl pro Gerät (vorab per CLI ermittelt)
 
     def _recv_n(self, n):
         buf = b''
@@ -204,31 +218,29 @@ class OpenRGBClient:
         data_len = struct.unpack_from('<I', hdr, 12)[0]
         return self._recv_n(data_len)
 
-    def _get_led_counts(self, count):
-        """LED-Anzahl per CLI ermitteln (zuverlässiger als Binary-Parsing)."""
+    def _drain(self):
+        """Verwirft ausstehende Server-Nachrichten (DEVICE_LIST_UPDATED etc.)."""
         try:
-            r = subprocess.run(['openrgb', '--list-devices'],
-                               capture_output=True, text=True, timeout=10)
-            counts = []
-            for line in r.stdout.splitlines():
-                if line.strip().startswith('LEDs:'):
-                    counts.append(len(re.findall(r"'[^']*'", line)))
-            return counts[:count] if counts else [0] * count
-        except Exception:
-            return [0] * count
+            self._sock.setblocking(False)
+            while self._sock.recv(4096):
+                pass
+        except (BlockingIOError, OSError):
+            pass
+        finally:
+            self._sock.setblocking(True)
 
     def connect(self):
         try:
+            if self._sock:
+                try: self._sock.close()
+                except: pass
             s = socket.socket()
-            s.settimeout(5)
+            s.settimeout(3)
             s.connect((OPENRGB_HOST, OPENRGB_PORT))
             self._sock = s
+            # Verbindung prüfen
             self._send(0, 0)
-            count = struct.unpack('<I', self._recv_packet()[:4])[0]
-            self._devices = self._get_led_counts(count)
-            # Direct-Modus für alle Geräte → ermöglicht Echtzeit-Steuerung
-            for i in range(count):
-                self._send(i, 1100)  # SETCUSTOMMODE
+            self._recv_packet()   # Controller-Count lesen und verwerfen
             return True
         except Exception:
             self._sock = None
@@ -237,11 +249,11 @@ class OpenRGBClient:
     def set_color(self, r, g, b):
         if not self._sock:
             return
+        self._drain()   # Ausstehende Server-Notifications verwerfen
         color = struct.pack('<I', (b << 16) | (g << 8) | r)
         for i, n in enumerate(self._devices):
             if n == 0:
                 continue
-            # data_size = 2 (uint16 count) + n*4 (colors), packet type 1050 = UPDATELEDS
             payload = struct.pack('<IH', 2 + n * 4, n) + color * n
             try:
                 self._send(i, 1050, payload)
@@ -429,7 +441,8 @@ def main():
     hyp          = HyperionClient()
     cava         = CavaReader()
     cap          = ScreenCapture()
-    orgb         = OpenRGBClient()
+    # LED-Counts per CLI holen BEVOR Socket geöffnet wird
+    orgb         = OpenRGBClient(_openrgb_fetch_led_counts())
     orgb.connect()
     colors       = parse_colors()
     prev         = colors.get('PRIMARY', (80, 120, 255))
@@ -443,6 +456,8 @@ def main():
     region          = None
     last_mode_check = 0.0
     last_orgb_upd   = 0.0
+    last_orgb_retry = 0.0
+    ORGB_RETRY_INT  = 30.0   # Reconnect maximal alle 30s versuchen
 
     # Pixel-Maske für deaktivierte LEDs einmalig holen
     mask = fetch_disabled_mask(hyp)
@@ -480,8 +495,8 @@ def main():
             if frame:
                 hyp.image(apply_mask(frame, mask))
                 if now - last_orgb_upd >= OPENRGB_RATE:
-                    if not orgb._sock:
-                        orgb.connect()
+                    if not orgb._sock and now - last_orgb_retry >= ORGB_RETRY_INT:
+                        orgb.connect(); last_orgb_retry = now
                     or_r, or_g, or_b = avg_frame_color(frame)
                     orgb.set_color(or_r, or_g, or_b)
                     last_orgb_upd = now
