@@ -6,9 +6,7 @@ screen content (video ambilight) and wallpaper colors (music breathing).
 
 import base64, json, math, os, re, socket, struct, subprocess, sys, threading, time
 
-OPENRGB_HOST = 'localhost'
-OPENRGB_PORT = 6742
-OPENRGB_RATE = 0.5   # OpenRGB update alle 0.5s reicht (kein Echtzeit-Bedarf)
+OPENRGB_RATE = 5.0   # OpenRGB update alle 5s (CLI-Aufruf, kein Echtzeit-Bedarf)
 
 HYPERION_HOST     = '192.168.1.45'
 HYPERION_PORT     = 19444
@@ -180,92 +178,26 @@ class HyperionClient:
         })
 
 
-def _openrgb_fetch_led_counts():
-    """Einmalige CLI-Abfrage der LED-Anzahl (vor Socket-Verbindung aufrufen!)."""
-    try:
-        r = subprocess.run(['openrgb', '--list-devices'],
-                           capture_output=True, text=True, timeout=10)
-        counts = []
-        for line in r.stdout.splitlines():
-            if line.strip().startswith('LEDs:'):
-                counts.append(len(re.findall(r"'[^']*'", line)))
-        return counts
-    except Exception:
-        return []
+class OpenRGBSetter:
+    """Setzt alle RGB-Geräte per CLI (fire-and-forget, non-blocking)."""
 
-
-class OpenRGBClient:
-    """Persistente Verbindung zum OpenRGB-Server, setzt alle Geräte auf eine Farbe."""
-
-    def __init__(self, led_counts):
-        self._sock    = None
-        self._devices = led_counts   # LED-Anzahl pro Gerät (vorab per CLI ermittelt)
-
-    def _recv_n(self, n):
-        buf = b''
-        while len(buf) < n:
-            chunk = self._sock.recv(n - len(buf))
-            if not chunk:
-                raise ConnectionError
-            buf += chunk
-        return buf
-
-    def _send(self, device, ptype, data=b''):
-        self._sock.sendall(b'ORGB' + struct.pack('<III', device, ptype, len(data)) + data)
-
-    def _recv_packet(self):
-        hdr      = self._recv_n(16)
-        data_len = struct.unpack_from('<I', hdr, 12)[0]
-        return self._recv_n(data_len)
-
-    def _drain(self):
-        """Verwirft ausstehende Server-Nachrichten (DEVICE_LIST_UPDATED etc.)."""
-        try:
-            self._sock.setblocking(False)
-            while self._sock.recv(4096):
-                pass
-        except (BlockingIOError, OSError):
-            pass
-        finally:
-            self._sock.setblocking(True)
-
-    def connect(self):
-        try:
-            if self._sock:
-                try: self._sock.close()
-                except: pass
-            s = socket.socket()
-            s.settimeout(3)
-            s.connect((OPENRGB_HOST, OPENRGB_PORT))
-            self._sock = s
-            # Verbindung prüfen
-            self._send(0, 0)
-            self._recv_packet()   # Controller-Count lesen und verwerfen
-            return True
-        except Exception:
-            self._sock = None
-            return False
+    def __init__(self):
+        self._proc   = None
+        self._lock   = threading.Lock()
 
     def set_color(self, r, g, b):
-        if not self._sock:
-            return
-        self._drain()   # Ausstehende Server-Notifications verwerfen
-        color = struct.pack('<I', (b << 16) | (g << 8) | r)
-        for i, n in enumerate(self._devices):
-            if n == 0:
-                continue
-            payload = struct.pack('<IH', 2 + n * 4, n) + color * n
-            try:
-                self._send(i, 1050, payload)
-            except Exception:
-                self._sock = None
+        with self._lock:
+            # Läuft noch ein alter Aufruf? Überspringen.
+            if self._proc and self._proc.poll() is None:
                 return
-
-    def close(self):
-        if self._sock:
-            try: self._sock.close()
-            except: pass
-            self._sock = None
+            color = f'{r:02X}{g:02X}{b:02X}'
+            try:
+                self._proc = subprocess.Popen(
+                    ['openrgb', '-c', color],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                )
+            except Exception:
+                pass
 
 
 def avg_frame_color(rgb_bytes):
@@ -441,9 +373,7 @@ def main():
     hyp          = HyperionClient()
     cava         = CavaReader()
     cap          = ScreenCapture()
-    # LED-Counts per CLI holen BEVOR Socket geöffnet wird
-    orgb         = OpenRGBClient(_openrgb_fetch_led_counts())
-    orgb.connect()
+    orgb         = OpenRGBSetter()
     colors       = parse_colors()
     prev         = colors.get('PRIMARY', (80, 120, 255))
     target       = prev
@@ -456,8 +386,6 @@ def main():
     region          = None
     last_mode_check = 0.0
     last_orgb_upd   = 0.0
-    last_orgb_retry = 0.0
-    ORGB_RETRY_INT  = 30.0   # Reconnect maximal alle 30s versuchen
 
     # Pixel-Maske für deaktivierte LEDs einmalig holen
     mask = fetch_disabled_mask(hyp)
@@ -495,8 +423,6 @@ def main():
             if frame:
                 hyp.image(apply_mask(frame, mask))
                 if now - last_orgb_upd >= OPENRGB_RATE:
-                    if not orgb._sock and now - last_orgb_retry >= ORGB_RETRY_INT:
-                        orgb.connect(); last_orgb_retry = now
                     or_r, or_g, or_b = avg_frame_color(frame)
                     orgb.set_color(or_r, or_g, or_b)
                     last_orgb_upd = now
@@ -510,8 +436,6 @@ def main():
             r, g, b = (int(v * br) for v in active_color)
             hyp.image(solid_image(r, g, b, mask))
             if now - last_orgb_upd >= OPENRGB_RATE:
-                if not orgb._sock:
-                    orgb.connect()
                 orgb.set_color(r, g, b)
                 last_orgb_upd = now
             time.sleep(0.033)
