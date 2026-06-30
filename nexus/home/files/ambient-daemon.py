@@ -235,11 +235,12 @@ def lerp(a, b, t):
 
 def _capture_once() -> bytes | None:
     try:
-        # JPEG + Compositor-seitige Skalierung → viel schneller als PNG
-        # Kein -o: capturt alle Monitore zusammen (funktioniert aus systemd-Kontext)
+        # WAYLAND_DISPLAY explizit setzen damit grim -o im systemd-Kontext funktioniert
+        env = os.environ.copy()
+        env.setdefault('WAYLAND_DISPLAY', 'wayland-1')
         r = subprocess.run(
-            ['grim', '-s', '0.0833', '-t', 'jpeg', TMP_CAP],
-            capture_output=True, timeout=2,
+            ['grim', '-o', MAIN_MONITOR, '-s', '0.0833', '-t', 'jpeg', TMP_CAP],
+            capture_output=True, timeout=2, env=env,
         )
         if r.returncode != 0:
             return None
