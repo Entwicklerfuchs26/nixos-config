@@ -6,12 +6,13 @@ screen content (video ambilight) and wallpaper colors (music breathing).
 
 import base64, json, math, os, re, socket, struct, subprocess, sys, threading, time
 
-HYPERION_HOST  = '192.168.1.45'
-HYPERION_PORT  = 19444
-MAIN_MONITOR   = 'DP-3'
-COLORS_FILE    = os.path.expanduser('~/.config/matugen/colors.sh')
-PRIORITY       = 100
-CAP_W, CAP_H   = 160, 90
+HYPERION_HOST     = '192.168.1.45'
+HYPERION_PORT     = 19444
+MAIN_MONITOR      = 'DP-3'
+COLORS_FILE       = os.path.expanduser('~/.config/matugen/colors.sh')
+PRIORITY          = 100
+CAP_W, CAP_H      = 160, 90
+DISABLED_LED_FROM = 250   # LEDs 250–299 sind unter dem Tisch
 
 VIDEO_CLASSES  = {'vivaldi-stable', 'vivaldi', 'chromium', 'google-chrome-stable'}
 VIDEO_TITLES   = ['aniworld', 'crunchyroll', 'youtube', 'youtu.be']
@@ -175,6 +176,45 @@ class HyperionClient:
         })
 
 
+def fetch_disabled_mask(hyp_client) -> bytearray:
+    """Gibt eine Byte-Maske zurück: 1 = dieser Pixel gehört zu einem deaktivierten LED."""
+    mask = bytearray(CAP_W * CAP_H)
+    try:
+        resp = hyp_client.send({'command': 'serverinfo', 'tan': 1})
+        if not resp:
+            return mask
+        leds = resp.get('info', {}).get('leds', [])
+        for led in leds[DISABLED_LED_FROM:]:
+            x1 = int(led['hmin'] * CAP_W)
+            x2 = max(x1 + 1, int(led['hmax'] * CAP_W))
+            y1 = int(led['vmin'] * CAP_H)
+            y2 = max(y1 + 1, int(led['vmax'] * CAP_H))
+            for y in range(y1, min(y2, CAP_H)):
+                for x in range(x1, min(x2, CAP_W)):
+                    mask[y * CAP_W + x] = 1
+    except Exception:
+        pass
+    return mask
+
+
+def apply_mask(rgb_bytes: bytes, mask: bytearray) -> bytes:
+    """Setzt Pixel auf schwarz wo mask==1."""
+    data = bytearray(rgb_bytes)
+    for i, m in enumerate(mask):
+        if m:
+            data[i * 3] = data[i * 3 + 1] = data[i * 3 + 2] = 0
+    return bytes(data)
+
+
+def solid_image(r: int, g: int, b: int, mask: bytearray) -> bytes:
+    """Einfarbiges Bild mit deaktivierten LEDs auf schwarz."""
+    data = bytearray(CAP_W * CAP_H * 3)
+    for i in range(CAP_W * CAP_H):
+        if not mask[i]:
+            data[i * 3], data[i * 3 + 1], data[i * 3 + 2] = r, g, b
+    return bytes(data)
+
+
 def parse_colors() -> dict:
     result = {}
     try:
@@ -289,20 +329,21 @@ def main():
     colors_mtime = 0.0
     transition_t = 0.0
     TRANSITION_DUR  = 2.0
-    MODE_CHECK_INT  = 2.0   # detect_mode() nur alle 2s
+    MODE_CHECK_INT  = 2.0
     last_mode       = 'idle'
     mode            = 'idle'
     last_mode_check = 0.0
 
+    # Pixel-Maske für deaktivierte LEDs einmalig holen
+    mask = fetch_disabled_mask(hyp)
+
     while True:
         now = time.monotonic()
 
-        # Modus nur alle 2s neu prüfen (hyprctl ist langsam)
         if now - last_mode_check >= MODE_CHECK_INT:
             mode            = detect_mode()
             last_mode_check = now
 
-        # wallpaper color change
         try:
             mtime = os.path.getmtime(COLORS_FILE)
             if mtime != colors_mtime:
@@ -325,7 +366,7 @@ def main():
                 cap.start()
             frame = cap.get()
             if frame:
-                hyp.image(frame)
+                hyp.image(apply_mask(frame, mask))
             time.sleep(0.1)
 
         elif mode == 'music':
@@ -333,7 +374,8 @@ def main():
                 cap.stop()
                 cava.start()
             br = cava.brightness
-            hyp.color(*(int(v * br) for v in active_color))
+            r, g, b = (int(v * br) for v in active_color)
+            hyp.image(solid_image(r, g, b, mask))
             time.sleep(0.033)
 
         else:
