@@ -4,7 +4,7 @@ Ambient light daemon — connects Hyperion (192.168.1.45:19444) to
 screen content (video ambilight) and wallpaper colors (music breathing).
 """
 
-import base64, json, math, os, re, socket, subprocess, sys, time
+import base64, json, math, os, re, socket, struct, subprocess, sys, threading, time
 
 HYPERION_HOST  = '192.168.1.45'
 HYPERION_PORT  = 19444
@@ -16,11 +16,80 @@ CAP_W, CAP_H   = 160, 90
 VIDEO_CLASSES  = {'vivaldi-stable', 'vivaldi', 'chromium', 'google-chrome-stable'}
 VIDEO_TITLES   = ['aniworld', 'crunchyroll', 'youtube', 'youtu.be']
 JELLY_CLASSES  = {'com.github.iwalton3.jellyfin-media-player', 'jellyfinmediaplayer'}
-# Vivaldi PWA class substrings → music mode
 MUSIC_CLS_SUB  = ['music.apple.com', 'spotify']
 
-TMP_CAP = '/tmp/ambient_cap.png'
-TMP_RGB = '/tmp/ambient_raw.rgb'
+TMP_CAP       = '/tmp/ambient_cap.png'
+TMP_RGB       = '/tmp/ambient_raw.rgb'
+CAVA_PIPE     = '/tmp/ambient_cava_pipe'
+CAVA_CONF     = '/tmp/ambient_cava.conf'
+
+CAVA_CONF_TPL = """\
+[general]
+bars = 1
+framerate = 30
+sleep_timer = 0
+
+[input]
+method = pipewire
+source = auto
+
+[output]
+method = raw
+raw_target = {pipe}
+data_format = binary
+channels = mono
+"""
+
+
+class CavaReader:
+    def __init__(self):
+        self.level   = 0.0
+        self._proc   = None
+        self._thread = None
+        self._stop   = False
+
+    def start(self):
+        if self._proc:
+            return
+        try:
+            os.mkfifo(CAVA_PIPE)
+        except FileExistsError:
+            pass
+        with open(CAVA_CONF, 'w') as f:
+            f.write(CAVA_CONF_TPL.format(pipe=CAVA_PIPE))
+        self._stop = False
+        self._proc = subprocess.Popen(
+            ['cava', '-p', CAVA_CONF],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+        self._thread = threading.Thread(target=self._loop, daemon=True)
+        self._thread.start()
+
+    def _loop(self):
+        try:
+            with open(CAVA_PIPE, 'rb') as f:
+                while not self._stop:
+                    data = f.read(2)
+                    if len(data) == 2:
+                        val = struct.unpack('<H', data)[0]
+                        self.level = val / 65535.0
+        except Exception:
+            pass
+
+    def stop(self):
+        self._stop = True
+        if self._proc:
+            self._proc.terminate()
+            self._proc = None
+        try:
+            os.unlink(CAVA_PIPE)
+        except Exception:
+            pass
+
+    @property
+    def brightness(self):
+        # 10 %–100 %, reagiert direkt auf Pegel
+        return max(0.10, min(1.0, self.level))
 
 
 class HyperionClient:
@@ -142,7 +211,6 @@ def detect_mode() -> str:
                 return 'video'
             if cls in VIDEO_CLASSES and any(site in title for site in VIDEO_TITLES):
                 return 'video'
-            # Vivaldi PWA music apps
             if any(sub in cls for sub in MUSIC_CLS_SUB):
                 return 'music'
     except Exception:
@@ -160,6 +228,7 @@ def detect_mode() -> str:
 
 def main():
     hyp          = HyperionClient()
+    cava         = CavaReader()
     colors       = parse_colors()
     prev         = colors.get('PRIMARY', (80, 120, 255))
     target       = prev
@@ -167,12 +236,11 @@ def main():
     transition_t = 0.0
     TRANSITION_DUR = 2.0
     last_mode    = 'idle'
-    t_start      = time.monotonic()
 
     while True:
         now = time.monotonic()
 
-        # detect wallpaper color change
+        # wallpaper color change
         try:
             mtime = os.path.getmtime(COLORS_FILE)
             if mtime != colors_mtime:
@@ -191,19 +259,23 @@ def main():
         mode = detect_mode()
 
         if mode == 'video':
+            if last_mode == 'music':
+                cava.stop()
             frame = capture_frame()
             if frame:
                 hyp.image(frame)
             time.sleep(0.1)
 
         elif mode == 'music':
-            elapsed    = now - t_start
-            # breathing: 1.5 s cycle, 15 %–100 % brightness
-            brightness = (math.sin(elapsed * math.pi * 2 / 1.5) + 1) / 2 * 0.85 + 0.15
-            hyp.color(*(int(v * brightness) for v in active_color))
-            time.sleep(0.05)
+            if last_mode != 'music':
+                cava.start()
+            br = cava.brightness
+            hyp.color(*(int(v * br) for v in active_color))
+            time.sleep(0.033)
 
         else:
+            if last_mode == 'music':
+                cava.stop()
             if last_mode != 'idle':
                 hyp.clear()
             time.sleep(0.5)
