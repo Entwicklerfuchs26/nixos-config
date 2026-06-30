@@ -16,6 +16,9 @@ CAP_W, CAP_H   = 160, 90
 VIDEO_CLASSES  = {'vivaldi-stable', 'vivaldi', 'chromium', 'google-chrome-stable'}
 VIDEO_TITLES   = ['aniworld', 'crunchyroll', 'youtube', 'youtu.be']
 JELLY_CLASSES  = {'com.github.iwalton3.jellyfin-media-player', 'jellyfinmediaplayer'}
+# Vivaldi PWA class substrings → video mode (z.B. vivaldi-www.crunchyroll.com__-Default)
+VIDEO_CLS_SUB  = ['crunchyroll', 'aniworld', 'youtube', 'jellyfin']
+# Vivaldi PWA class substrings → music mode
 MUSIC_CLS_SUB  = ['music.apple.com', 'spotify']
 
 TMP_CAP       = '/tmp/ambient_cap.png'
@@ -222,6 +225,8 @@ def detect_mode() -> str:
             title = c.get('title', '').lower()
             # Video hat Vorrang — sofort zurück
             if cls in JELLY_CLASSES:
+                return 'video'
+            if any(sub in cls for sub in VIDEO_CLS_SUB):
                 return 'video'
             if cls in VIDEO_CLASSES and any(site in title for site in VIDEO_TITLES):
                 return 'video'
