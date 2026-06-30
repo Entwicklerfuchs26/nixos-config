@@ -24,8 +24,6 @@ VIDEO_CLS_SUB  = ['crunchyroll', 'aniworld', 'youtube', 'jellyfin']
 # Vivaldi PWA class substrings → music mode
 MUSIC_CLS_SUB  = ['music.apple.com', 'spotify']
 
-TMP_CAP       = '/tmp/ambient_cap.png'
-TMP_RGB       = '/tmp/ambient_raw.rgb'
 CAVA_PIPE     = '/tmp/ambient_cava_pipe'
 CAVA_CONF     = '/tmp/ambient_cava.conf'
 
@@ -274,22 +272,19 @@ def _capture_once(region=None):
         env = os.environ.copy()
         env.setdefault('WAYLAND_DISPLAY', 'wayland-1')
         if region:
-            # Gezieltes Fenster capturen
-            cmd = ['grim', '-g', region, '-t', 'jpeg', TMP_CAP]
+            grim_cmd = ['grim', '-g', region, '-t', 'pam', '-']
         else:
-            cmd = ['grim', '-o', MAIN_MONITOR, '-s', '0.0833', '-t', 'jpeg', TMP_CAP]
-        r = subprocess.run(cmd, capture_output=True, timeout=2, env=env,
+            grim_cmd = ['grim', '-o', MAIN_MONITOR, '-s', '0.0833', '-t', 'pam', '-']
+        grim = subprocess.Popen(
+            grim_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=env,
         )
-        if r.returncode != 0:
-            return None
-        r = subprocess.run(
-            ['convert', TMP_CAP, '-resize', f'{CAP_W}x{CAP_H}!', '-flip', '-depth', '8', f'rgb:{TMP_RGB}'],
-            capture_output=True, timeout=2,
+        conv = subprocess.Popen(
+            ['convert', '-', '-resize', f'{CAP_W}x{CAP_H}!', '-flip', '-depth', '8', 'rgb:-'],
+            stdin=grim.stdout, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
         )
-        if r.returncode != 0:
-            return None
-        with open(TMP_RGB, 'rb') as f:
-            data = f.read()
+        grim.stdout.close()
+        data, _ = conv.communicate(timeout=3)
+        grim.wait(timeout=1)
         return data if len(data) == CAP_W * CAP_H * 3 else None
     except Exception:
         return None
