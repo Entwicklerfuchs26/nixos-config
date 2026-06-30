@@ -72,7 +72,9 @@
     (button :class "media-btn" :onclick "eww close media-picker; hyprctl dispatch submap reset; jellyfinmediaplayer &"
       (label :text "Jellyfin"))
     (button :class "media-btn" :onclick "eww close media-picker; hyprctl dispatch submap reset; vivaldi --app=https://www.youtube.com --class=media-youtube &"
-      (label :text "YouTube"))))
+      (label :text "YouTube"))
+    (button :class "media-btn" :onclick "eww close media-picker; hyprctl dispatch submap reset; steam &"
+      (label :text "Steam"))))
 
 ;; Window: Sysmon
 

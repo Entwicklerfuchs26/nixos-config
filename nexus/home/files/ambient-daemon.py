@@ -14,7 +14,7 @@ PRIORITY          = 100
 CAP_W, CAP_H      = 160, 90
 DISABLED_LED_FROM = 250   # LEDs 250–299 sind unter dem Tisch
 
-VIDEO_CLASSES  = {'vivaldi-stable', 'vivaldi', 'chromium', 'google-chrome-stable'}
+VIDEO_CLASSES  = {'vivaldi-stable', 'vivaldi', 'chromium', 'google-chrome-stable', 'steam'}
 VIDEO_TITLES   = ['aniworld', 'crunchyroll', 'youtube', 'youtu.be']
 JELLY_CLASSES  = {'com.github.iwalton3.jellyfin-media-player', 'jellyfinmediaplayer'}
 # Vivaldi PWA class substrings → video mode (z.B. vivaldi-www.crunchyroll.com__-Default)
@@ -308,6 +308,8 @@ def detect_mode():
             at, sz = c.get('at', [0, 0]), c.get('size', [1920, 1080])
             region = f'{at[0]},{at[1]} {sz[0]}x{sz[1]}'
             if cls in JELLY_CLASSES:
+                return 'video', region
+            if cls == 'steam':
                 return 'video', region
             if any(sub in cls for sub in VIDEO_CLS_SUB):
                 return 'video', region
