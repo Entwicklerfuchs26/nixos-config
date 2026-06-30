@@ -233,14 +233,16 @@ def lerp(a, b, t):
     return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
 
-def _capture_once() -> bytes | None:
+def _capture_once(region=None):
     try:
-        # WAYLAND_DISPLAY explizit setzen damit grim -o im systemd-Kontext funktioniert
         env = os.environ.copy()
         env.setdefault('WAYLAND_DISPLAY', 'wayland-1')
-        r = subprocess.run(
-            ['grim', '-o', MAIN_MONITOR, '-s', '0.0833', '-t', 'jpeg', TMP_CAP],
-            capture_output=True, timeout=2, env=env,
+        if region:
+            # Gezieltes Fenster capturen
+            cmd = ['grim', '-g', region, '-t', 'jpeg', TMP_CAP]
+        else:
+            cmd = ['grim', '-o', MAIN_MONITOR, '-s', '0.0833', '-t', 'jpeg', TMP_CAP]
+        r = subprocess.run(cmd, capture_output=True, timeout=2, env=env,
         )
         if r.returncode != 0:
             return None
@@ -261,9 +263,14 @@ class ScreenCapture:
     """Nimmt Frames im Hintergrund auf — Hauptschleife holt immer den neuesten."""
     def __init__(self):
         self._frame  = None
+        self._region = None   # 'x,y WxH' für grim -g, None = ganzer Monitor
         self._lock   = threading.Lock()
         self._stop   = False
         self._thread = None
+
+    def set_region(self, region):
+        with self._lock:
+            self._region = region
 
     def start(self):
         self._stop = False
@@ -272,12 +279,14 @@ class ScreenCapture:
 
     def _loop(self):
         while not self._stop:
-            frame = _capture_once()
+            with self._lock:
+                region = self._region
+            frame = _capture_once(region)
             if frame:
                 with self._lock:
                     self._frame = frame
 
-    def get(self) -> bytes | None:
+    def get(self):
         with self._lock:
             return self._frame
 
@@ -286,7 +295,8 @@ class ScreenCapture:
         self._frame = None
 
 
-def detect_mode() -> str:
+def detect_mode():
+    """Returns (mode, region_str_or_None) — region ist 'x,y WxH' für grim -g."""
     has_music = False
     try:
         r = subprocess.run(['hyprctl', 'clients', '-j'], capture_output=True, text=True, timeout=2)
@@ -295,29 +305,30 @@ def detect_mode() -> str:
                 continue
             cls   = c.get('class', '').lower()
             title = c.get('title', '').lower()
-            # Video hat Vorrang — sofort zurück
+            at, sz = c.get('at', [0, 0]), c.get('size', [1920, 1080])
+            region = f'{at[0]},{at[1]} {sz[0]}x{sz[1]}'
             if cls in JELLY_CLASSES:
-                return 'video'
+                return 'video', region
             if any(sub in cls for sub in VIDEO_CLS_SUB):
-                return 'video'
+                return 'video', region
             if cls in VIDEO_CLASSES and any(site in title for site in VIDEO_TITLES):
-                return 'video'
+                return 'video', region
             if any(sub in cls for sub in MUSIC_CLS_SUB):
                 has_music = True
     except Exception:
         pass
 
     if has_music:
-        return 'music'
+        return 'music', None
 
     try:
         r = subprocess.run(['playerctl', 'status'], capture_output=True, text=True, timeout=2)
         if r.stdout.strip() == 'Playing':
-            return 'music'
+            return 'music', None
     except Exception:
         pass
 
-    return 'idle'
+    return 'idle', None
 
 
 def main():
@@ -333,6 +344,7 @@ def main():
     MODE_CHECK_INT  = 2.0
     last_mode       = 'idle'
     mode            = 'idle'
+    region          = None
     last_mode_check = 0.0
 
     # Pixel-Maske für deaktivierte LEDs einmalig holen
@@ -342,7 +354,9 @@ def main():
         now = time.monotonic()
 
         if now - last_mode_check >= MODE_CHECK_INT:
-            mode            = detect_mode()
+            mode, region    = detect_mode()
+            if region:
+                cap.set_region(region)
             last_mode_check = now
 
         try:
