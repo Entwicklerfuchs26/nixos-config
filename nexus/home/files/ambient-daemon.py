@@ -6,7 +6,7 @@ screen content (video ambilight) and wallpaper colors (music breathing).
 
 import base64, json, math, os, re, socket, struct, subprocess, sys, threading, time
 
-OPENRGB_RATE = 5.0   # OpenRGB update alle 5s (CLI-Aufruf, kein Echtzeit-Bedarf)
+OPENRGB_RATE = 2.0   # OpenRGB update alle 2s (CLI-Aufruf im Hintergrund)
 
 HYPERION_HOST     = '192.168.1.45'
 HYPERION_PORT     = 19444
@@ -283,7 +283,7 @@ def _capture_once(region=None):
         if r.returncode != 0:
             return None
         r = subprocess.run(
-            ['convert', TMP_CAP, '-fuzz', '8%', '-trim', '-resize', f'{CAP_W}x{CAP_H}!', '-flip', '-depth', '8', f'rgb:{TMP_RGB}'],
+            ['convert', TMP_CAP, '-resize', f'{CAP_W}x{CAP_H}!', '-flip', '-depth', '8', f'rgb:{TMP_RGB}'],
             capture_output=True, timeout=2,
         )
         if r.returncode != 0:
@@ -426,7 +426,7 @@ def main():
                     or_r, or_g, or_b = avg_frame_color(frame)
                     orgb.set_color(or_r, or_g, or_b)
                     last_orgb_upd = now
-            time.sleep(0.1)
+            time.sleep(0.05)
 
         elif mode == 'music':
             if last_mode != 'music':
