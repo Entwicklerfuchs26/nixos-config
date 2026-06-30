@@ -272,14 +272,14 @@ def _capture_once(region=None):
         env = os.environ.copy()
         env.setdefault('WAYLAND_DISPLAY', 'wayland-1')
         if region:
-            grim_cmd = ['grim', '-g', region, '-t', 'pam', '-']
+            grim_cmd = ['grim', '-g', region, '-t', 'jpeg', '-']
         else:
-            grim_cmd = ['grim', '-o', MAIN_MONITOR, '-s', '0.0833', '-t', 'pam', '-']
+            grim_cmd = ['grim', '-o', MAIN_MONITOR, '-s', '0.0833', '-t', 'jpeg', '-']
         grim = subprocess.Popen(
             grim_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=env,
         )
         conv = subprocess.Popen(
-            ['convert', '-', '-resize', f'{CAP_W}x{CAP_H}!', '-flip', '-depth', '8', 'rgb:-'],
+            ['magick', '-', '-resize', f'{CAP_W}x{CAP_H}!', '-flip', '-depth', '8', 'rgb:-'],
             stdin=grim.stdout, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
         )
         grim.stdout.close()
