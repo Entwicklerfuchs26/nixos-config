@@ -204,40 +204,18 @@ class OpenRGBClient:
         data_len = struct.unpack_from('<I', hdr, 12)[0]
         return self._recv_n(data_len)
 
-    def _parse_led_count(self, data):
-        off = [4]   # uint32 data_size überspringen
-
-        def ru16():
-            v = struct.unpack_from('<H', data, off[0])[0]; off[0] += 2; return v
-        def ru32():
-            v = struct.unpack_from('<I', data, off[0])[0]; off[0] += 4; return v
-        def ri32():
-            v = struct.unpack_from('<i', data, off[0])[0]; off[0] += 4; return v
-        def skip_str():
-            off[0] += 2 + ru16() - 2   # Länge lesen + überspringen
-        def skip_str2():
-            l = ru16(); off[0] += l
-
+    def _get_led_counts(self, count):
+        """LED-Anzahl per CLI ermitteln (zuverlässiger als Binary-Parsing)."""
         try:
-            for _ in range(6): skip_str2()          # name/vendor/desc/version/serial/location
-            for _ in range(ru16()):                 # modes
-                skip_str2()                         # mode name
-                ri32()                              # value
-                flags = ru32()
-                if flags & 1:  ru32(); ru32()       # speed_min/max
-                if flags & 16: ru32(); ru32()       # brightness_min/max
-                ru32(); ru32()                      # colors_min/max
-                if flags & 1:  ru32()               # speed
-                if flags & 16: ru32()               # brightness
-                ru32(); ru32()                      # direction, color_mode
-                off[0] += ru16() * 4                # colors
-            for _ in range(ru16()):                 # zones
-                skip_str2()                         # zone name
-                ru32(); ru32(); ru32(); ru32()      # type, leds_min, leds_max, leds_count
-                off[0] += ru16()                    # matrix data
-            return ru16()                           # num_leds ← das wollen wir
+            r = subprocess.run(['openrgb', '--list-devices'],
+                               capture_output=True, text=True, timeout=10)
+            counts = []
+            for line in r.stdout.splitlines():
+                if line.strip().startswith('LEDs:'):
+                    counts.append(len(re.findall(r"'[^']*'", line)))
+            return counts[:count] if counts else [0] * count
         except Exception:
-            return 1
+            return [0] * count
 
     def connect(self):
         try:
@@ -247,10 +225,10 @@ class OpenRGBClient:
             self._sock = s
             self._send(0, 0)
             count = struct.unpack('<I', self._recv_packet()[:4])[0]
-            self._devices = []
+            self._devices = self._get_led_counts(count)
+            # Direct-Modus für alle Geräte → ermöglicht Echtzeit-Steuerung
             for i in range(count):
-                self._send(i, 1, struct.pack('<I', i))
-                self._devices.append(self._parse_led_count(self._recv_packet()))
+                self._send(i, 1100)  # SETCUSTOMMODE
             return True
         except Exception:
             self._sock = None
@@ -261,9 +239,12 @@ class OpenRGBClient:
             return
         color = struct.pack('<I', (b << 16) | (g << 8) | r)
         for i, n in enumerate(self._devices):
-            payload = struct.pack('<IH', 4 + 2 + n * 4, n) + color * n
+            if n == 0:
+                continue
+            # data_size = 2 (uint16 count) + n*4 (colors), packet type 1050 = UPDATELEDS
+            payload = struct.pack('<IH', 2 + n * 4, n) + color * n
             try:
-                self._send(i, 5, payload)
+                self._send(i, 1050, payload)
             except Exception:
                 self._sock = None
                 return
