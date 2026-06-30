@@ -247,7 +247,7 @@ def _capture_once(region=None):
         if r.returncode != 0:
             return None
         r = subprocess.run(
-            ['convert', TMP_CAP, '-resize', f'{CAP_W}x{CAP_H}!', '-flip', '-depth', '8', f'rgb:{TMP_RGB}'],
+            ['convert', TMP_CAP, '-fuzz', '8%', '-trim', '-resize', f'{CAP_W}x{CAP_H}!', '-flip', '-depth', '8', f'rgb:{TMP_RGB}'],
             capture_output=True, timeout=2,
         )
         if r.returncode != 0:
