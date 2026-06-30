@@ -6,6 +6,10 @@ screen content (video ambilight) and wallpaper colors (music breathing).
 
 import base64, json, math, os, re, socket, struct, subprocess, sys, threading, time
 
+OPENRGB_HOST = 'localhost'
+OPENRGB_PORT = 6742
+OPENRGB_RATE = 0.5   # OpenRGB update alle 0.5s reicht (kein Echtzeit-Bedarf)
+
 HYPERION_HOST     = '192.168.1.45'
 HYPERION_PORT     = 19444
 MAIN_MONITOR      = 'DP-3'
@@ -176,6 +180,113 @@ class HyperionClient:
         })
 
 
+class OpenRGBClient:
+    """Persistente Verbindung zum OpenRGB-Server, setzt alle Geräte auf eine Farbe."""
+
+    def __init__(self):
+        self._sock    = None
+        self._devices = []   # LED-Anzahl pro Gerät
+
+    def _recv_n(self, n):
+        buf = b''
+        while len(buf) < n:
+            chunk = self._sock.recv(n - len(buf))
+            if not chunk:
+                raise ConnectionError
+            buf += chunk
+        return buf
+
+    def _send(self, device, ptype, data=b''):
+        self._sock.sendall(b'ORGB' + struct.pack('<III', device, ptype, len(data)) + data)
+
+    def _recv_packet(self):
+        hdr      = self._recv_n(16)
+        data_len = struct.unpack_from('<I', hdr, 12)[0]
+        return self._recv_n(data_len)
+
+    def _parse_led_count(self, data):
+        off = [4]   # uint32 data_size überspringen
+
+        def ru16():
+            v = struct.unpack_from('<H', data, off[0])[0]; off[0] += 2; return v
+        def ru32():
+            v = struct.unpack_from('<I', data, off[0])[0]; off[0] += 4; return v
+        def ri32():
+            v = struct.unpack_from('<i', data, off[0])[0]; off[0] += 4; return v
+        def skip_str():
+            off[0] += 2 + ru16() - 2   # Länge lesen + überspringen
+        def skip_str2():
+            l = ru16(); off[0] += l
+
+        try:
+            for _ in range(6): skip_str2()          # name/vendor/desc/version/serial/location
+            for _ in range(ru16()):                 # modes
+                skip_str2()                         # mode name
+                ri32()                              # value
+                flags = ru32()
+                if flags & 1:  ru32(); ru32()       # speed_min/max
+                if flags & 16: ru32(); ru32()       # brightness_min/max
+                ru32(); ru32()                      # colors_min/max
+                if flags & 1:  ru32()               # speed
+                if flags & 16: ru32()               # brightness
+                ru32(); ru32()                      # direction, color_mode
+                off[0] += ru16() * 4                # colors
+            for _ in range(ru16()):                 # zones
+                skip_str2()                         # zone name
+                ru32(); ru32(); ru32(); ru32()      # type, leds_min, leds_max, leds_count
+                off[0] += ru16()                    # matrix data
+            return ru16()                           # num_leds ← das wollen wir
+        except Exception:
+            return 1
+
+    def connect(self):
+        try:
+            s = socket.socket()
+            s.settimeout(5)
+            s.connect((OPENRGB_HOST, OPENRGB_PORT))
+            self._sock = s
+            self._send(0, 0)
+            count = struct.unpack('<I', self._recv_packet()[:4])[0]
+            self._devices = []
+            for i in range(count):
+                self._send(i, 1, struct.pack('<I', i))
+                self._devices.append(self._parse_led_count(self._recv_packet()))
+            return True
+        except Exception:
+            self._sock = None
+            return False
+
+    def set_color(self, r, g, b):
+        if not self._sock:
+            return
+        color = struct.pack('<I', (b << 16) | (g << 8) | r)
+        for i, n in enumerate(self._devices):
+            payload = struct.pack('<IH', 4 + 2 + n * 4, n) + color * n
+            try:
+                self._send(i, 5, payload)
+            except Exception:
+                self._sock = None
+                return
+
+    def close(self):
+        if self._sock:
+            try: self._sock.close()
+            except: pass
+            self._sock = None
+
+
+def avg_frame_color(rgb_bytes):
+    """Durchschnittsfarbe der Bildmitte (40–60 % vertikal, 20–80 % horizontal)."""
+    r = g = b = n = 0
+    x1, x2 = CAP_W // 5, CAP_W * 4 // 5
+    y1, y2 = CAP_H * 2 // 5, CAP_H * 3 // 5
+    for y in range(y1, y2):
+        for x in range(x1, x2):
+            i = (y * CAP_W + x) * 3
+            r += rgb_bytes[i]; g += rgb_bytes[i+1]; b += rgb_bytes[i+2]; n += 1
+    return (r // n, g // n, b // n) if n else (0, 0, 0)
+
+
 def fetch_disabled_mask(hyp_client) -> bytearray:
     """Gibt eine Byte-Maske zurück: 1 = dieser Pixel gehört zu einem deaktivierten LED."""
     mask = bytearray(CAP_W * CAP_H)
@@ -337,6 +448,8 @@ def main():
     hyp          = HyperionClient()
     cava         = CavaReader()
     cap          = ScreenCapture()
+    orgb         = OpenRGBClient()
+    orgb.connect()
     colors       = parse_colors()
     prev         = colors.get('PRIMARY', (80, 120, 255))
     target       = prev
@@ -348,6 +461,7 @@ def main():
     mode            = 'idle'
     region          = None
     last_mode_check = 0.0
+    last_orgb_upd   = 0.0
 
     # Pixel-Maske für deaktivierte LEDs einmalig holen
     mask = fetch_disabled_mask(hyp)
@@ -384,6 +498,12 @@ def main():
             frame = cap.get()
             if frame:
                 hyp.image(apply_mask(frame, mask))
+                if now - last_orgb_upd >= OPENRGB_RATE:
+                    if not orgb._sock:
+                        orgb.connect()
+                    or_r, or_g, or_b = avg_frame_color(frame)
+                    orgb.set_color(or_r, or_g, or_b)
+                    last_orgb_upd = now
             time.sleep(0.1)
 
         elif mode == 'music':
@@ -393,6 +513,11 @@ def main():
             br = cava.brightness
             r, g, b = (int(v * br) for v in active_color)
             hyp.image(solid_image(r, g, b, mask))
+            if now - last_orgb_upd >= OPENRGB_RATE:
+                if not orgb._sock:
+                    orgb.connect()
+                orgb.set_color(r, g, b)
+                last_orgb_upd = now
             time.sleep(0.033)
 
         else:
@@ -400,9 +525,8 @@ def main():
                 cap.stop()
                 cava.stop()
                 hyp.clear()
+                orgb.set_color(0, 0, 0)
             time.sleep(0.5)
-
-        last_mode = mode
 
         last_mode = mode
 
