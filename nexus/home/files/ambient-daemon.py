@@ -6,16 +6,18 @@ screen content (video ambilight) and wallpaper colors (music breathing).
 
 import base64, json, math, os, re, socket, subprocess, sys, time
 
-HYPERION_HOST = '192.168.1.45'
-HYPERION_PORT = 19444
-MAIN_MONITOR  = 'DP-3'
-COLORS_FILE   = os.path.expanduser('~/.config/matugen/colors.sh')
-PRIORITY      = 100
-CAP_W, CAP_H  = 160, 90
+HYPERION_HOST  = '192.168.1.45'
+HYPERION_PORT  = 19444
+MAIN_MONITOR   = 'DP-3'
+COLORS_FILE    = os.path.expanduser('~/.config/matugen/colors.sh')
+PRIORITY       = 100
+CAP_W, CAP_H   = 160, 90
 
-VIDEO_CLASSES = {'vivaldi-stable', 'vivaldi', 'chromium', 'google-chrome-stable'}
-VIDEO_TITLES  = ['aniworld', 'crunchyroll', 'youtube', 'youtu.be', 'music.apple.com']
-JELLY_CLASSES = {'com.github.iwalton3.jellyfin-media-player', 'jellyfinmediaplayer'}
+VIDEO_CLASSES  = {'vivaldi-stable', 'vivaldi', 'chromium', 'google-chrome-stable'}
+VIDEO_TITLES   = ['aniworld', 'crunchyroll', 'youtube', 'youtu.be']
+JELLY_CLASSES  = {'com.github.iwalton3.jellyfin-media-player', 'jellyfinmediaplayer'}
+# Vivaldi PWA class substrings → music mode
+MUSIC_CLS_SUB  = ['music.apple.com', 'spotify']
 
 TMP_CAP = '/tmp/ambient_cap.png'
 TMP_RGB = '/tmp/ambient_raw.rgb'
@@ -140,6 +142,9 @@ def detect_mode() -> str:
                 return 'video'
             if cls in VIDEO_CLASSES and any(site in title for site in VIDEO_TITLES):
                 return 'video'
+            # Vivaldi PWA music apps
+            if any(sub in cls for sub in MUSIC_CLS_SUB):
+                return 'music'
     except Exception:
         pass
 
