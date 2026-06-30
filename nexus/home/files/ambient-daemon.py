@@ -44,6 +44,8 @@ channels = mono
 class CavaReader:
     def __init__(self):
         self.level   = 0.0
+        self._peak   = 0.0   # schnell hoch, langsam runter
+        self._avg    = 0.5   # langsamer Durchschnitt (passt sich an Lautstärke an)
         self._proc   = None
         self._thread = None
         self._stop   = False
@@ -66,13 +68,23 @@ class CavaReader:
         self._thread.start()
 
     def _loop(self):
+        # Decay pro Frame bei 30fps: ~250ms Halbwertszeit
+        DECAY     = 0.91
+        AVG_ALPHA = 0.015  # langsamer Durchschnitt (~2s Anpassung)
         try:
             with open(CAVA_PIPE, 'rb') as f:
                 while not self._stop:
                     data = f.read(2)
                     if len(data) == 2:
-                        val = struct.unpack('<H', data)[0]
-                        self.level = val / 65535.0
+                        val = struct.unpack('<H', data)[0] / 65535.0
+                        # Peak: sofort hoch, langsam runter
+                        self._peak = val if val > self._peak else self._peak * DECAY
+                        # Langzeit-Durchschnitt passt sich an Gesamtlautstärke an
+                        self._avg  = self._avg * (1 - AVG_ALPHA) + val * AVG_ALPHA
+                        # Helligkeit = wie viel der Peak über dem Durchschnitt liegt
+                        floor = self._avg * 0.85
+                        span  = max(0.001, 1.0 - floor)
+                        self.level = max(0.0, min(1.0, (self._peak - floor) / span))
         except Exception:
             pass
 
@@ -88,8 +100,8 @@ class CavaReader:
 
     @property
     def brightness(self):
-        # 10 %–100 %, reagiert direkt auf Pegel
-        return max(0.10, min(1.0, self.level))
+        # 0 %–100 %, beat-relativ (funktioniert auch bei komprimierter Musik)
+        return self.level
 
 
 class HyperionClient:
