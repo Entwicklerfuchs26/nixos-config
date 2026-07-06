@@ -4,7 +4,7 @@ Ambient light daemon — connects Hyperion (192.168.1.45:19444) to
 screen content (video ambilight) and wallpaper colors (music breathing).
 """
 
-import base64, json, math, os, re, socket, struct, subprocess, sys, threading, time
+import base64, http.server, json, math, os, re, socket, socketserver, struct, subprocess, sys, threading, time
 
 OPENRGB_RATE = 2.0   # OpenRGB update alle 2s (CLI-Aufruf im Hintergrund)
 
@@ -43,6 +43,64 @@ raw_target = {pipe}
 data_format = binary
 channels = mono
 """
+
+
+CONTROL_PORT      = 7777
+OVERRIDE_COOLDOWN = 5.0
+
+_ctrl_lock        = threading.Lock()
+_override_mode    = None
+_override_monitor = None   # None → MAIN_MONITOR
+_last_change      = 0.0
+
+
+class _CtrlHandler(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *a): pass
+
+    def do_GET(self):
+        if self.path == '/state':
+            with _ctrl_lock:
+                ov  = _override_mode
+                mon = _override_monitor
+            body = json.dumps({'override': ov, 'monitor': mon}).encode()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(body)
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def do_POST(self):
+        global _override_mode, _override_monitor, _last_change
+        parts = self.path.strip('/').split('/')
+        # /mode/video/DP-1  oder  /mode/video  oder  /mode/music  etc.
+        if parts[0] != 'mode':
+            self.send_response(404); self.end_headers(); return
+        if len(parts) == 3 and parts[1] == 'video':
+            new_mode = 'video'
+            new_mon  = parts[2]
+        elif len(parts) == 2 and parts[1] in ('video', 'music', 'idle', 'auto'):
+            new_mode = None if parts[1] == 'auto' else parts[1]
+            new_mon  = None
+        else:
+            self.send_response(404); self.end_headers(); return
+        now = time.monotonic()
+        with _ctrl_lock:
+            if now - _last_change < OVERRIDE_COOLDOWN:
+                self.send_response(429); self.end_headers(); return
+            _override_mode    = new_mode
+            _override_monitor = new_mon if new_mode == 'video' else None
+            _last_change      = now
+        self.send_response(200)
+        self.end_headers()
+
+
+def _start_control_server():
+    class _Server(socketserver.ThreadingMixIn, http.server.HTTPServer):
+        daemon_threads = True
+    srv = _Server(('0.0.0.0', CONTROL_PORT), _CtrlHandler)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
 
 
 class CavaReader:
@@ -267,14 +325,14 @@ def lerp(a, b, t):
     return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
 
-def _capture_once(region=None):
+def _capture_once(region=None, monitor=None):
     try:
         env = os.environ.copy()
         env.setdefault('WAYLAND_DISPLAY', 'wayland-1')
         if region:
             grim_cmd = ['grim', '-g', region, '-t', 'jpeg', '-']
         else:
-            grim_cmd = ['grim', '-o', MAIN_MONITOR, '-s', '0.0833', '-t', 'jpeg', '-']
+            grim_cmd = ['grim', '-o', monitor or MAIN_MONITOR, '-s', '0.0833', '-t', 'jpeg', '-']
         grim = subprocess.Popen(
             grim_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=env,
         )
@@ -293,15 +351,23 @@ def _capture_once(region=None):
 class ScreenCapture:
     """Nimmt Frames im Hintergrund auf — Hauptschleife holt immer den neuesten."""
     def __init__(self):
-        self._frame  = None
-        self._region = None   # 'x,y WxH' für grim -g, None = ganzer Monitor
-        self._lock   = threading.Lock()
-        self._stop   = False
-        self._thread = None
+        self._frame   = None
+        self._region  = None   # 'x,y WxH' für grim -g, hat Vorrang
+        self._monitor = None   # Monitorname für grim -o, None → MAIN_MONITOR
+        self._lock    = threading.Lock()
+        self._stop    = False
+        self._thread  = None
 
     def set_region(self, region):
         with self._lock:
-            self._region = region
+            self._region  = region
+            self._monitor = None
+
+    def set_monitor(self, monitor):
+        """Capture ganzen Monitor (kein Fenster-Crop)."""
+        with self._lock:
+            self._region  = None
+            self._monitor = monitor
 
     def start(self):
         self._stop = False
@@ -311,8 +377,9 @@ class ScreenCapture:
     def _loop(self):
         while not self._stop:
             with self._lock:
-                region = self._region
-            frame = _capture_once(region)
+                region  = self._region
+                monitor = self._monitor
+            frame = _capture_once(region, monitor)
             if frame:
                 with self._lock:
                     self._frame = frame
@@ -340,7 +407,7 @@ def detect_mode():
             region = f'{at[0]},{at[1]} {sz[0]}x{sz[1]}'
             if cls in JELLY_CLASSES:
                 return 'video', region
-            if cls == 'steam':
+            if cls.startswith('steam_app_'):
                 return 'video', region
             if any(sub in cls for sub in VIDEO_CLS_SUB):
                 return 'video', region
@@ -384,14 +451,26 @@ def main():
 
     # Pixel-Maske für deaktivierte LEDs einmalig holen
     mask = fetch_disabled_mask(hyp)
+    hyp.clear()  # alten eingefrorenen Frame aus vorheriger Session entfernen
+    _start_control_server()
 
     while True:
         now = time.monotonic()
 
         if now - last_mode_check >= MODE_CHECK_INT:
-            mode, region    = detect_mode()
-            if region:
-                cap.set_region(region)
+            with _ctrl_lock:
+                ov     = _override_mode
+                ov_mon = _override_monitor
+            if ov:
+                mode = ov
+                if ov == 'video':
+                    cap.set_monitor(ov_mon)   # None → MAIN_MONITOR
+                else:
+                    region = None
+            else:
+                mode, region = detect_mode()
+                if region:
+                    cap.set_region(region)
             last_mode_check = now
 
         try:
@@ -439,8 +518,9 @@ def main():
             if last_mode != 'idle':
                 cap.stop()
                 cava.stop()
-                hyp.clear()
                 orgb.set_color(0, 0, 0)
+            r, g, b = (int(v * 0.35) for v in active_color)
+            hyp.image(solid_image(r, g, b, mask))
             time.sleep(0.5)
 
         last_mode = mode

@@ -16,4 +16,5 @@
     source = ./files/papirus-color.sh;
     executable = true;
   };
+  home.file.".config/gtk-4.0/gtk.css.templ".source = ./files/gtk4.css.templ;
 }

@@ -7,8 +7,17 @@
 
   "modules-left": ["custom/power","custom/launcher","hyprland/workspaces"],
   "modules-center": ["clock"],
-  "modules-right": ["custom/controlcenter","pulseaudio","bluetooth","network","tray"],
+  "modules-right": ["custom/ambient","custom/controlcenter","pulseaudio","bluetooth","network","tray"],
 
+
+"custom/ambient": {
+  "format": "󰛨 {}",
+  "return-type": "json",
+  "exec": "~/.local/bin/ambient-waybar",
+  "interval": 3,
+  "on-click": "~/.local/bin/ambient-toggle",
+  "tooltip": true
+},
 "custom/power": {
   "format": "⏻",
   "tooltip": false,
@@ -50,15 +59,21 @@
   "on-scroll-down": "pactl set-sink-volume @DEFAULT_SINK@ -5%"
 },
 "bluetooth": {
-  "format": "BT",
-  "format-connected": "BT",
-  "on-click": "blueman-manager"
+  "format": "󰂯",
+  "format-connected": "󰂱",
+  "format-disabled": "󰂲",
+  "tooltip-format": "󰂯  Bluetooth aktiv",
+  "tooltip-format-connected": "󰂱  {device_alias}",
+  "tooltip-format-enumerate-connected": "  {device_alias}",
+  "on-click": "bt-menu"
 },
 "network": {
-  "format-wifi": "📶",
-  "format-ethernet": "🌐",
-  "format-disconnected": "❌",
-  "on-click": "nm-connection-editor"
+  "format-wifi": "󰤨",
+  "format-ethernet": "󰈀",
+  "format-disconnected": "󰤭",
+  "tooltip-format-wifi": "{essid}  {signalStrength}%",
+  "tooltip-format-ethernet": "{ifname}",
+  "on-click": "net-menu"
 },
 
   "tray": {"spacing": 10}

@@ -1,14 +1,14 @@
 window {
-  background: rgba({{colors.surface.default.red}}, {{colors.surface.default.green}}, {{colors.surface.default.blue}}, 0.45);
+  background: rgba({{colors.surface.default.red}}, {{colors.surface.default.green}}, {{colors.surface.default.blue}}, 0.65);
   border-radius: 24px;
-  border-style: none;
-  margin: 0px 8px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: rgba(255, 255, 255, 0.13);
+  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.50), 0 2px 8px rgba(0, 0, 0, 0.25);
+  margin-bottom: 8px;
 }
 #box {
-  padding: 4px 10px;
-}
-#active {
-  border-bottom: 3px solid {{colors.primary.default.hex}};
+  padding: 8px 16px;
 }
 button, image {
   background: none;
@@ -16,20 +16,33 @@ button, image {
   box-shadow: none;
 }
 button {
-  padding: 6px;
-  margin: 0 3px;
+  padding: 7px;
+  margin: 0 2px;
   border-radius: 14px;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease;
 }
 button:hover {
-  background: rgba({{colors.primary.default.red}}, {{colors.primary.default.green}}, {{colors.primary.default.blue}}, 0.25);
-  border-radius: 14px;
+  background: rgba({{colors.primary.default.red}}, {{colors.primary.default.green}}, {{colors.primary.default.blue}}, 0.22);
 }
 button:focus {
   box-shadow: none;
 }
-.dot, .indicator {
-  opacity: 0;
-  min-height: 0;
-  min-width: 0;
+#active {
+  background: rgba({{colors.primary.default.red}}, {{colors.primary.default.green}}, {{colors.primary.default.blue}}, 0.18);
+  border-radius: 14px;
+}
+.dot {
+  background: {{colors.primary.default.hex}};
+  border-radius: 50%;
+  min-height: 5px;
+  min-width: 5px;
+  margin-bottom: 2px;
+  opacity: 1;
+}
+.indicator {
+  background: {{colors.primary.default.hex}};
+  border-radius: 50%;
+  min-height: 5px;
+  min-width: 5px;
+  opacity: 1;
 }

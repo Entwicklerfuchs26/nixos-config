@@ -6,6 +6,8 @@
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_6_12;
 
+  hardware.uinput.enable = true;
+
   # Hostname
   networking.hostName = "nexus";
     networking.networkmanager.enable = true;
@@ -57,6 +59,22 @@
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
+
+    wireplumber.extraConfig."51-bluez-bose-a2dp" = {
+      "monitor.bluez.rules" = [
+        {
+          matches = [
+            { "device.name" = "bluez_card.7C_96_D2_77_56_7E"; }
+          ];
+          actions = {
+            update-props = {
+              "bluez5.auto-connect" = [ "a2dp_sink" ];
+              "device.profile" = "a2dp-sink";
+            };
+          };
+        }
+      ];
+    };
   };
 
   # Unfree Pakete erlauben (brauchen wir für NVIDIA)
@@ -69,6 +87,13 @@
   hardware.enableAllFirmware = true;
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
+  hardware.bluetooth.settings = {
+    General = {
+      Experimental = true;
+      ReconnectAttempts = 7;
+      ReconnectIntervals = "1,2,4,8,16,32,64";
+    };
+  };
 
 services.udev.packages = [ pkgs.openrgb ];
 boot.kernelModules = [ "btusb" "i2c-dev" ];
@@ -81,6 +106,8 @@ boot.kernelModules = [ "btusb" "i2c-dev" ];
 users.groups.i2c = {};
 services.udev.extraRules = ''
   KERNEL=="i2c-[0-9]*", GROUP="i2c", MODE="0660"
+  # Intel AX200 Bluetooth USB-Autosuspend deaktivieren (verhindert zufälliges Verschwinden)
+  ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="8087", ATTR{idProduct}=="0029", ATTR{power/autosuspend}="-1"
 '';
 
 # iPhone Mounting
@@ -118,4 +145,5 @@ services.udev.extraRules = ''
     });
   '';
 
+networking.firewall.allowedTCPPorts = [ 8080 8081 8888 7777 ];
 }

@@ -29,6 +29,16 @@
     executable = true;
   };
 
+  home.file.".local/bin/ambient-toggle" = {
+    source = ./files/ambient-toggle.sh;
+    executable = true;
+  };
+
+  home.file.".local/bin/ambient-waybar" = {
+    source = ./files/ambient-waybar.sh;
+    executable = true;
+  };
+
   home.file.".local/bin/bt-menu" = {
     source = ./files/bt-menu.sh;
     executable = true;

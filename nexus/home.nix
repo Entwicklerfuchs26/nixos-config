@@ -21,7 +21,9 @@
       obsidian
       vscode
       matugen
+      mission-center
       (pkgs.callPackage ./pkgs/aniworld.nix { })
+      (pkgs.callPackage ./pkgs/anime-organizer.nix { })
     ];
     programs.git = {
       enable = true;

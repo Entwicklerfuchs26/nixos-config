@@ -110,3 +110,32 @@ circular-progress.vram { color: #fab387; }
 .media-btn:hover label {
   color: #ffffff;
 }
+
+.ambient-pill {
+  background-color: rgba(13, 26, 17, 0.95);
+  border-radius: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(64, 145, 108, 0.45);
+  min-width: 140px;
+}
+
+.ambient-btn {
+  background-color: rgba(64, 145, 108, 0.12);
+  border-radius: 10px;
+  padding: 8px 16px;
+  margin: 2px 0;
+}
+
+.ambient-btn label {
+  color: #b8d4c0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ambient-btn:hover, .ambient-btn.active {
+  background-color: rgba(64, 145, 108, 0.6);
+}
+
+.ambient-btn:hover label, .ambient-btn.active label {
+  color: #ffffff;
+}

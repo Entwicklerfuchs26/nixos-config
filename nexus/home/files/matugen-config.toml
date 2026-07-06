@@ -21,3 +21,6 @@ output_path = "/home/fuchs/.config/hypr/hyprlock.conf"
 [templates.rofi]
 input_path = "/home/fuchs/.config/rofi/theme.rasi.templ"
 output_path = "/home/fuchs/.config/rofi/theme.rasi"
+[templates.gtk4]
+input_path = "/home/fuchs/.config/gtk-4.0/gtk.css.templ"
+output_path = "/home/fuchs/.config/gtk-4.0/gtk.css"

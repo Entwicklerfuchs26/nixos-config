@@ -5,6 +5,8 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
+DOWNLOADED_SHOWS=()
+
 ntfy_send() {
     curl -s -X POST "https://ntfy.sh/Nexus-NixOS_fuchs" \
         -H "Title: $1" \
@@ -57,6 +59,7 @@ download_one() {
     if [ $RC -eq 0 ]; then
         echo "==> Fertig!"
         ntfy_send "Download fertig ✓" "$LABEL" "white_check_mark"
+        DOWNLOADED_SHOWS+=("$NAME")
     else
         echo "==> Alle Provider fehlgeschlagen!"
         ntfy_send "Download fehlgeschlagen ✗" "$LABEL" "x"
@@ -74,3 +77,18 @@ done
 
 echo ""
 echo "======== Alle $GESAMT Downloads abgeschlossen ========"
+
+# Metadaten für alle erfolgreich heruntergeladenen Serien holen
+if [ ${#DOWNLOADED_SHOWS[@]} -gt 0 ] && command -v AniO &>/dev/null; then
+    echo ""
+    echo "======== Metadaten & Jellyfin-Struktur ========"
+    declare -A SEEN
+    for SHOW in "${DOWNLOADED_SHOWS[@]}"; do
+        if [ -z "${SEEN[$SHOW]+x}" ]; then
+            SEEN[$SHOW]=1
+            echo "  Organisiere: $SHOW"
+            AniO "$HOME/Videos/Animes" --show "$SHOW" --auto
+        fi
+    done
+    ntfy_send "Metadaten fertig ✓" "${DOWNLOADED_SHOWS[*]}" "sparkles"
+fi

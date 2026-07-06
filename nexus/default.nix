@@ -13,5 +13,6 @@
     ./davinci.nix
     ./printing.nix
     ./ollama.nix
+    ./docker.nix
   ];
 }

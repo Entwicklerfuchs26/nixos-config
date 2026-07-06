@@ -11,6 +11,7 @@
 
 
   programs.firefox.enable = true;
+  programs.kdeconnect.enable = true;
 
 programs.obs-studio = {
     enable = true;
@@ -78,7 +79,7 @@ programs.obs-studio = {
     ffmpeg
 
     # VPN
-    proton-vpn-gnome-desktop
+    proton-vpn
 
     # Clipboard
     cliphist
@@ -92,9 +93,12 @@ programs.obs-studio = {
     git
     wget
     curl
+    nodejs
 
-    # Schriften
-    nerd-fonts.jetbrains-mono
+    # Wissensfestplatte
+    kiwix-tools
+
+    # Schriften (nur für systemPackages; für fontconfig → fonts.packages unten)
     pipewire
     wireplumber
     pulseaudio
@@ -130,8 +134,13 @@ programs.obs-studio = {
     # KI / AI
     claude-code
 
-    # Python-Pakete (PyPI)
+    # Python
+    python3
     pipx
+  ];
+
+  fonts.packages = with pkgs; [
+    nerd-fonts.jetbrains-mono
   ];
 
   qt = {
