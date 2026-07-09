@@ -14,5 +14,6 @@
     ./printing.nix
     ./ollama.nix
     ./docker.nix
+    ./affinity.nix
   ];
 }

@@ -1,12 +1,17 @@
 { config, pkgs, ... }:
 
-{
+let
+  userPackages = import ./user-packages.nix { inherit pkgs; };
+in {
   # flatpak
   services.flatpak.enable = true;
   xdg.portal = {
     enable = true;
-    extraPortals = [ pkgs.xdg-desktop-portal-hyprland ];
-    config.common.default = "*";
+    extraPortals = [
+      pkgs.xdg-desktop-portal-hyprland
+      pkgs.xdg-desktop-portal-gtk
+    ];
+    config.common.default = "hyprland;gtk";
   };
 
 
@@ -137,7 +142,8 @@ programs.obs-studio = {
     # Python
     python3
     pipx
-  ];
+    uv
+  ] ++ userPackages;
 
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono

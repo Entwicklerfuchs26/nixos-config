@@ -24,6 +24,7 @@
       mission-center
       (pkgs.callPackage ./pkgs/aniworld.nix { })
       (pkgs.callPackage ./pkgs/anime-organizer.nix { })
+      (pkgs.callPackage ./pkgs/nix-manager.nix { })
     ];
     programs.git = {
       enable = true;

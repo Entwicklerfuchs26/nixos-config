@@ -12,10 +12,14 @@ from xml.etree import ElementTree as ET
 from xml.dom import minidom
 
 ANILIST_API = "https://graphql.anilist.co"
+ANILIST_HEADERS = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0",
+}
 VIDEO_EXTS = {".mkv", ".mp4", ".avi", ".mov", ".m4v", ".webm", ".ts"}
 
-# Relationstypen die auf eine Elternserie hinweisen
-ELTERN_RELATIONEN = {"PARENT", "PREQUEL", "SEQUEL", "SIDE_STORY"}
+ELTERN_RELATIONEN = {"PARENT", "SIDE_STORY"}
 TV_FORMATE = {"TV", "TV_SHORT", "ONA"}
 
 SERIES_QUERY = """
@@ -55,8 +59,19 @@ def query_anilist(title: str):
             resp = requests.post(
                 ANILIST_API,
                 json={"query": SERIES_QUERY, "variables": {"search": title}},
+                headers=ANILIST_HEADERS,
                 timeout=10,
             )
+            if resp.status_code == 429:
+                wait = 60 * (versuch + 1)
+                print(f"      Rate-Limit (429) — warte {wait}s...")
+                time.sleep(wait)
+                continue
+            if resp.status_code == 404:
+                wait = 30 * (versuch + 1)
+                print(f"      HTTP 404 — warte {wait}s...")
+                time.sleep(wait)
+                continue
             resp.raise_for_status()
             data = resp.json()
             if "errors" in data:
@@ -64,9 +79,20 @@ def query_anilist(title: str):
             return data.get("data", {}).get("Media")
         except Exception:
             if versuch < 2:
-                time.sleep(2)
+                time.sleep(3 * (versuch + 1))
             else:
                 raise
+    raise Exception("AniList nicht erreichbar nach 3 Versuchen")
+
+
+def titles_similar(search: str, result_title: str) -> bool:
+    """Prüft ob Suchbegriff und Ergebnis sinnvoll übereinstimmen."""
+    stop = {"the", "a", "an", "of", "in", "and", "to", "is", "no", "ga", "wa", "de", "na"}
+    sw = {w for w in re.findall(r'\w+', search.lower()) if w not in stop and len(w) > 2}
+    rw = {w for w in re.findall(r'\w+', result_title.lower()) if w not in stop and len(w) > 2}
+    if not sw:
+        return True
+    return bool(sw & rw)
 
 
 def download_image(url: str, path: Path) -> bool:
@@ -235,14 +261,27 @@ def make_episode_nfo(show_title: str, season: int, episode: int, title: str = No
 def extract_se(filename: str):
     stem = Path(filename).stem
 
+    # S01E01 / s01e01
     m = re.search(r"[Ss](\d+)[Ee](\d+)", stem)
     if m:
         return int(m.group(1)), int(m.group(2))
 
-    m = re.search(r"[Ff]olge[_ ]?(\d+)", stem)
+    # Staffel 2 Folge 10 / Staffel_2_Folge_10 / Staffel_1_Floge_2 (Deutsch)
+    m = re.search(r"[Ss]taffel[_ ]?(\d+)[^a-zA-Z0-9]+[Ff](?:olge|loge)[_ ]?(\d+)", stem)
+    if m:
+        return int(m.group(1)), int(m.group(2))
+
+    # DVD-Specials → Season 00
+    m = re.search(r"[Dd][Vv][Dd][_ ]?(\d+)", stem)
+    if m:
+        return 0, int(m.group(1))
+
+    # Folge 10 / Floge 10 ohne Staffel (nimmt Season 1 an)
+    m = re.search(r"[Ff](?:olge|loge)[_ ]?(\d+)", stem)
     if m:
         return 1, int(m.group(1))
 
+    # trailing number
     m = re.search(r"(?:[-_ ])(\d{1,3})$", stem)
     if m:
         return 1, int(m.group(1))
@@ -254,6 +293,7 @@ def find_videos(path: Path):
     return sorted(
         p for p in path.rglob("*")
         if p.is_file() and p.suffix.lower() in VIDEO_EXTS
+        and not p.name.startswith("._")  # macOS metadata-Dateien ignorieren
     )
 
 
@@ -287,6 +327,9 @@ def execute_film(show_dir: Path, info: dict, anime_dir: Path, dry_run: bool):
         if not dest.exists():
             shutil.move(str(video), str(dest))
             print(f"    Verschoben: Season 00/{new_name}")
+        elif show_dir != parent_dir and video.exists():
+            video.unlink()
+            print(f"    Duplikat entfernt: {video.name}")
 
         ep_nfo = season00 / new_name.replace(ext, ".nfo")
         if not ep_nfo.exists():
@@ -297,7 +340,7 @@ def execute_film(show_dir: Path, info: dict, anime_dir: Path, dry_run: bool):
             print("    episode.nfo erstellt")
 
         if show_dir != parent_dir and show_dir.exists():
-            leftover = [f for f in show_dir.rglob("*") if f.is_file() and f.suffix.lower() in VIDEO_EXTS]
+            leftover = [f for f in show_dir.rglob("*") if f.is_file() and f.suffix.lower() in VIDEO_EXTS and not f.name.startswith("._")]
             if not leftover:
                 shutil.rmtree(show_dir)
                 print(f"    Alter Ordner entfernt: {show_dir.name}/")
@@ -339,6 +382,22 @@ def execute_film(show_dir: Path, info: dict, anime_dir: Path, dry_run: bool):
     if not dest.exists():
         shutil.move(str(video), str(dest))
         print(f"    Verschoben: {new_name}")
+    elif show_dir != target and video.exists():
+        video.unlink()
+        print(f"    Duplikat entfernt: {video.name}")
+
+    # Extras/-Unterordner in Zielordner übernehmen (Jellyfin-kompatibel)
+    if show_dir != target:
+        extras_src = show_dir / "Extras"
+        if extras_src.is_dir():
+            extras_dst = target / "Extras"
+            extras_dst.mkdir(exist_ok=True)
+            for ef in sorted(extras_src.iterdir()):
+                if ef.is_file() and not ef.name.startswith("._"):
+                    dst = extras_dst / ef.name
+                    if not dst.exists():
+                        shutil.move(str(ef), str(dst))
+                        print(f"    Extra verschoben: {ef.name}")
 
     for d in sorted(target.iterdir()):
         if d.is_dir() and re.match(r"Season \d+", d.name):
@@ -348,7 +407,7 @@ def execute_film(show_dir: Path, info: dict, anime_dir: Path, dry_run: bool):
                 print(f"    Season-Ordner entfernt: {d.name}/")
 
     if show_dir != target and show_dir.exists():
-        leftover = [f for f in show_dir.rglob("*") if f.is_file() and f.suffix.lower() in VIDEO_EXTS]
+        leftover = [f for f in show_dir.rglob("*") if f.is_file() and f.suffix.lower() in VIDEO_EXTS and not f.name.startswith("._")]
         if not leftover:
             shutil.rmtree(show_dir)
             print(f"    Alter Ordner entfernt: {show_dir.name}/")
@@ -415,6 +474,10 @@ def execute_serie(show_dir: Path, info: dict, anime_dir: Path, dry_run: bool):
         if not dest.exists():
             shutil.move(str(v), str(dest))
             moved += 1
+        elif show_dir != target and v.exists():
+            # Gleiche Episode bereits im Zielordner vorhanden — Duplikat entfernen
+            v.unlink()
+            print(f"    Duplikat entfernt: {v.name}")
 
         ep_nfo = season_dir / new_name.replace(ext, ".nfo")
         if not ep_nfo.exists():
@@ -423,7 +486,7 @@ def execute_serie(show_dir: Path, info: dict, anime_dir: Path, dry_run: bool):
     print(f"    {moved} Datei(en) verschoben")
 
     if show_dir != target and show_dir.exists():
-        leftover = [f for f in show_dir.rglob("*") if f.is_file() and f.suffix.lower() in VIDEO_EXTS]
+        leftover = [f for f in show_dir.rglob("*") if f.is_file() and f.suffix.lower() in VIDEO_EXTS and not f.name.startswith("._")]
         if not leftover:
             shutil.rmtree(show_dir)
             print(f"    Alter Ordner entfernt: {show_dir.name}/")
@@ -458,8 +521,21 @@ def plan_phase(shows: list, auto: bool, anime_dir: Path) -> list:
             info = query_anilist(search)
         except Exception as e:
             print(f"      AniList-Fehler: {e}")
-            plans.append((show_dir, None))
-            continue
+            if not auto:
+                alt = input("      Alternativen Suchbegriff eingeben (leer = überspringen): ").strip()
+                if alt:
+                    try:
+                        info = query_anilist(alt)
+                    except Exception as e2:
+                        print(f"      Fehler: {e2}")
+                        plans.append((show_dir, None))
+                        continue
+                else:
+                    plans.append((show_dir, None))
+                    continue
+            else:
+                plans.append((show_dir, None))
+                continue
 
         if not info:
             print("      Nicht auf AniList gefunden — übersprungen")
@@ -483,7 +559,12 @@ def plan_phase(shows: list, auto: bool, anime_dir: Path) -> list:
                 print(f"      Elternserie: {parent_dir.name}  → Season 00")
 
         if auto:
-            plans.append((show_dir, info))
+            if not titles_similar(search, title_en):
+                print(f"      WARNUNG: Kein Titelübereinstimmung — übersprungen (manuell prüfen!)")
+                plans.append((show_dir, None))
+            else:
+                plans.append((show_dir, info))
+            time.sleep(1.0)
             continue
 
         ans = input("      Korrekt? [J/n/m=manuell/ü=überspringen]: ").strip().lower()
@@ -509,7 +590,7 @@ def plan_phase(shows: list, auto: bool, anime_dir: Path) -> list:
         else:
             plans.append((show_dir, info))
 
-        time.sleep(0.3)
+        time.sleep(1.0)
 
     return plans
 
