@@ -1,0 +1,7 @@
+# Nix-Build-Ergebnis Symlink – niemals committen
+result
+result-*
+
+# Temporäre Dateien
+*.tmp
+*.bak

@@ -41,6 +41,7 @@
         "ntfy.sternenhof.space"
         "zugang.sternenhof.space"
         "darwin26.sternenhof.space"
+        "sojus.sternenhof.space"
       ];
     };
 

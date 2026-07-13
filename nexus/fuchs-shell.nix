@@ -1,6 +1,14 @@
 { config, pkgs, lib, ... }:
 
 {
+  # ── agenix Secret: SHELL_MCP_API_KEY ─────────────────────────────────────────
+  age.secrets.fuchs-shell-env = {
+    file   = ../secrets/fuchs-shell-env.age;
+    owner  = "fuchs-shell";
+    group  = "fuchs-shell";
+    mode   = "0400";
+  };
+
   users.users.fuchs-shell = {
     isSystemUser = true;
     group        = "fuchs-shell";
@@ -32,13 +40,13 @@
       Type            = "simple";
       User            = "fuchs-shell";
       Group           = "fuchs-shell";
-      EnvironmentFile = "/etc/sojus/fuchs-shell.env";
+      # EnvironmentFile kommt jetzt von agenix (wird bei jedem Boot aus .age entschlüsselt)
+      EnvironmentFile = config.age.secrets.fuchs-shell-env.path;
       ExecStart       = "${pkgs.uv}/bin/uv run --python ${pkgs.python3}/bin/python3 --with fastmcp --with httpx /etc/sojus/fuchs-shell-server.py";
       Restart         = "on-failure";
       RestartSec      = "15s";
       NoNewPrivileges = true;
       PrivateTmp      = false;
-      # Shell-User braucht Lesezugriff auf Homeverzeichnis-Dateien von Jonas
       ReadOnlyPaths   = [ "/home/fuchs" ];
       ReadWritePaths  = [ "/var/lib/fuchs-shell" "/tmp" ];
     };
