@@ -98,9 +98,13 @@ in {
     {
       users = [ "sojus" ];
       commands = [
-        # systemctl: nur restart/status für Sojus-relevante Services
+        # systemctl: nur restart/status für Sojus-relevante Services (mit und ohne Flags)
         {
           command = "/run/current-system/sw/bin/systemctl restart sojus-core";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "/run/current-system/sw/bin/systemctl restart sojus-core *";
           options = [ "NOPASSWD" ];
         }
         {
@@ -108,11 +112,23 @@ in {
           options = [ "NOPASSWD" ];
         }
         {
+          command = "/run/current-system/sw/bin/systemctl status sojus-core *";
+          options = [ "NOPASSWD" ];
+        }
+        {
           command = "/run/current-system/sw/bin/systemctl restart fuchs-shell";
           options = [ "NOPASSWD" ];
         }
         {
+          command = "/run/current-system/sw/bin/systemctl restart fuchs-shell *";
+          options = [ "NOPASSWD" ];
+        }
+        {
           command = "/run/current-system/sw/bin/systemctl status fuchs-shell";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "/run/current-system/sw/bin/systemctl status fuchs-shell *";
           options = [ "NOPASSWD" ];
         }
 
