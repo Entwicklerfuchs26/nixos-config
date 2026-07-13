@@ -12,9 +12,13 @@ let
     log() { echo "[safe-rebuild] $*"; }
     die() { echo "[safe-rebuild] FEHLER: $*" >&2; exit 1; }
 
-    # git als fuchs (Eigentümer des Repos), da sojus keinen Schreibzugriff hat
+    # git als root; safe.directory + expliziter Autor da root != Repo-Eigentümer
     git_fuchs() {
-      sudo -u fuchs git -C "$FLAKE_DIR" "$@"
+      git -C "$FLAKE_DIR" \
+        -c safe.directory="$FLAKE_DIR" \
+        -c user.name="Sojus-Agent" \
+        -c user.email="sojus@nexus" \
+        "$@"
     }
 
     log "Starte sicheren Rebuild: '$DESCRIPTION'"
