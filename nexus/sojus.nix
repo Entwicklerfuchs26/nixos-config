@@ -23,6 +23,9 @@ let
 
     log "Starte sicheren Rebuild: '$DESCRIPTION'"
 
+    # libgit2 (intern in nix) prüft Repo-Eigentümer – root braucht safe.directory
+    git config --global --add safe.directory "$FLAKE_DIR" 2>/dev/null || true
+
     # ── Pre-rebuild commit ────────────────────────────────────────────────────
     log "Staging alle Änderungen..."
     git_fuchs add -A
