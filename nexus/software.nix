@@ -154,4 +154,12 @@ programs.obs-studio = {
     platformTheme = "qt5ct";
     style = "breeze";
   };
+
+  # Maltego: Java-Detektor crasht wenn listFiles() null zurückgibt
+  # /usr/lib/jvm braucht den JDK-Link, /opt braucht read-Berechtigung (war 0711)
+  systemd.tmpfiles.rules = [
+    "d /usr/lib/jvm 0755 root root -"
+    "L+ /usr/lib/jvm/java-21-openjdk - - - - ${pkgs.jdk21}/lib/openjdk"
+    "d /opt 0755 root root -"
+  ];
 }

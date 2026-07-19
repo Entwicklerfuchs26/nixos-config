@@ -2,5 +2,6 @@
 { pkgs }: with pkgs; [
   betaflight-configurator
   lightburn
+  maltego
   stellarium
 ]

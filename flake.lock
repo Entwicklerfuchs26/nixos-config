@@ -245,7 +245,8 @@
         "nixpkgs": "nixpkgs_2",
         "quickshell": "quickshell",
         "skwd-daemon": "skwd-daemon",
-        "skwd-wall": "skwd-wall"
+        "skwd-wall": "skwd-wall",
+        "sojus-core": "sojus-core"
       }
     },
     "rust-overlay": {
@@ -323,6 +324,23 @@
         "owner": "liixini",
         "repo": "skwd-wall",
         "type": "github"
+      }
+    },
+    "sojus-core": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1784279655,
+        "narHash": "sha256-7MmS1CN7xVAnw6RUteWUNqQ+RLQJV2hW4QVIo9zfdbU=",
+        "path": "/home/fuchs/sojus-core",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/fuchs/sojus-core",
+        "type": "path"
       }
     },
     "systems": {

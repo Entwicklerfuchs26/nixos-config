@@ -25,9 +25,13 @@
      inputs.nixpkgs.follows = "nixpkgs";
      inputs.home-manager.follows = "home-manager";
    };
+   sojus-core = {
+     url = "path:/home/fuchs/sojus-core";
+     inputs.nixpkgs.follows = "nixpkgs";
+   };
  };
 
-outputs = {self, nixpkgs, home-manager, quickshell, awww, skwd-daemon, skwd-wall, agenix, ... }: {
+outputs = {self, nixpkgs, home-manager, quickshell, awww, skwd-daemon, skwd-wall, agenix, sojus-core, ... }: {
    nixosConfigurations.nexus = nixpkgs.lib.nixosSystem {
      system = "x86-64-linux";
      specialArgs = {inherit quickshell awww skwd-daemon skwd-wall;};
@@ -37,6 +41,7 @@ outputs = {self, nixpkgs, home-manager, quickshell, awww, skwd-daemon, skwd-wall
        home-manager.nixosModules.home-manager
        skwd-wall.nixosModules.default
        agenix.nixosModules.default
+       sojus-core.nixosModules.nexus
      ];
    };
  };
