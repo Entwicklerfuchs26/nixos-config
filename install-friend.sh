@@ -120,7 +120,7 @@ info "Nexus-Konfiguration nach /etc/nixos kopiert."
 
 # ── Generierte Dateien für Nix-Flake tracken ─────────────────────────────────
 # Flakes sehen nur git-getrackte Dateien – generierte Configs müssen gestaged sein.
-sudo git -C /etc/nixos add -A
+sudo env PATH="$PATH" git -C /etc/nixos add -A
 
 # ── NixOS rebuild ─────────────────────────────────────────────────────────────
 step "NixOS rebuild (das dauert beim ersten Mal lange...)"
