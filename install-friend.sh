@@ -20,6 +20,7 @@ command -v nixos-rebuild &>/dev/null || die "nixos-rebuild nicht gefunden. Bist 
 if ! command -v git &>/dev/null; then
   die "git nicht gefunden. Bitte so ausführen:\n\n  nix-shell -p git curl --run 'bash <(curl -sSL https://raw.githubusercontent.com/Entwicklerfuchs26/nixos-config/main/install-friend.sh)'"
 fi
+GIT_CMD="git"
 
 step "Willkommen zum Nexus-Setup"
 echo "Dieses Skript richtet Jonass NixOS-Konfiguration auf deinem Rechner ein."
