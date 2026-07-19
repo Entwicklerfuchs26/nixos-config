@@ -18,10 +18,7 @@ command -v nixos-rebuild &>/dev/null || die "nixos-rebuild nicht gefunden. Bist 
 
 # git verfügbar?
 if ! command -v git &>/dev/null; then
-  warn "git nicht gefunden – installiere temporär via nix-shell..."
-  GIT_CMD="nix-shell -p git --run git"
-else
-  GIT_CMD="git"
+  die "git nicht gefunden. Bitte so ausführen:\n\n  nix-shell -p git curl --run 'bash <(curl -sSL https://raw.githubusercontent.com/Entwicklerfuchs26/nixos-config/main/install-friend.sh)'"
 fi
 
 step "Willkommen zum Nexus-Setup"
