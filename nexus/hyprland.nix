@@ -59,7 +59,7 @@ services.displayManager.defaultSession = "hyprland";
   ];
 
 environment.sessionVariables = {
-  QML2_IMPORT_PATH = "/nix/store/51g2z5sgf10d6zin7fy1b8l95xz8agqf-kirigami-6.20.0/lib/qt-6/qml:${pkgs.qt6.qtmultimedia}/lib/qt-6/qml";
+  QML2_IMPORT_PATH = "${pkgs.kdePackages.kirigami}/lib/qt-6/qml:${pkgs.qt6.qtmultimedia}/lib/qt-6/qml";
   XDG_CURRENT_DESKTOP = "Hyprland";
 };
 
