@@ -115,12 +115,12 @@ info "Altes /etc/nixos gesichert → $NIXOS_BACKUP"
 # Neues Verzeichnis anlegen und Dateien kopieren
 sudo cp -r "$TMP/repo" /etc/nixos
 sudo cp "$HW_BACKUP" /etc/nixos/hardware-configuration.nix
-sudo chown -R root:root /etc/nixos
+sudo chown -R "${USER}:users" /etc/nixos
 info "Nexus-Konfiguration nach /etc/nixos kopiert."
 
 # ── Generierte Dateien für Nix-Flake tracken ─────────────────────────────────
 # Flakes sehen nur git-getrackte Dateien – generierte Configs müssen gestaged sein.
-sudo env PATH="$PATH" git -C /etc/nixos add -A
+git -C /etc/nixos add -A
 
 # ── NixOS rebuild ─────────────────────────────────────────────────────────────
 step "NixOS rebuild (das dauert beim ersten Mal lange...)"
