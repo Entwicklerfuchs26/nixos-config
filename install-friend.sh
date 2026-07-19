@@ -17,10 +17,7 @@ command -v nixos-rebuild &>/dev/null || die "nixos-rebuild nicht gefunden. Bist 
 [[ -f /etc/nixos/hardware-configuration.nix ]] || die "Keine hardware-configuration.nix in /etc/nixos. NixOS zuerst installieren."
 
 # git verfügbar?
-if ! command -v git &>/dev/null; then
-  die "git nicht gefunden. Bitte so ausführen:\n\n  nix-shell -p git curl --run 'bash <(curl -sSL https://raw.githubusercontent.com/Entwicklerfuchs26/nixos-config/main/install-friend.sh)'"
-fi
-GIT_CMD="git"
+command -v git &>/dev/null || die "git nicht gefunden. Bitte so starten:\n\n  nix-shell -p git --run 'bash /tmp/install.sh'"
 
 step "Willkommen zum Nexus-Setup"
 echo "Dieses Skript richtet Jonass NixOS-Konfiguration auf deinem Rechner ein."
@@ -69,7 +66,7 @@ TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
 info "Klone $REPO ..."
-$GIT_CMD clone "$REPO" "$TMP/repo"
+git clone "$REPO" "$TMP/repo"
 cd "$TMP/repo"
 
 # ── hardware-configuration.nix einfügen ──────────────────────────────────────
