@@ -127,6 +127,36 @@ info "Nexus-Konfiguration nach /etc/nixos kopiert."
 step "NixOS rebuild (das dauert beim ersten Mal lange...)"
 sudo nixos-rebuild switch --flake /etc/nixos#nexus-guest
 
+# ── skwd-wall Konfiguration deployen ─────────────────────────────────────────
+# Wird NICHT von home-manager verwaltet – skwd-wall schreibt diese Dateien selbst.
+step "skwd-wall Konfiguration einrichten"
+USERHOME="/home/${USERNAME}"
+SKWD_SRC="/etc/nixos/nexus/dotfiles/skwd-wall"
+
+mkdir -p "${USERHOME}/.config/skwd-wall/scripts"
+mkdir -p "${USERHOME}/.config/skwd-wall/data/matugen/templates"
+
+# config.json: /home/fuchs/ → tatsächliches Home-Verzeichnis ersetzen
+sed "s|/home/fuchs/|${USERHOME}/|g" \
+    "${SKWD_SRC}/config.json" \
+    > "${USERHOME}/.config/skwd-wall/config.json"
+
+# Skripte deployen: /home/fuchs/ ersetzen, ausführbar machen
+for SCRIPT in "${SKWD_SRC}/scripts/"*.sh; do
+  DEST="${USERHOME}/.config/skwd-wall/scripts/$(basename "$SCRIPT")"
+  sed "s|/home/fuchs/|${USERHOME}/|g; s|/run/user/1000/|/run/user/$(id -u ${USERNAME} 2>/dev/null || echo 1000)/|g" \
+      "$SCRIPT" > "$DEST"
+  chmod +x "$DEST"
+done
+
+# Templates deployen (keine Pfad-Ersetzung nötig)
+cp "${SKWD_SRC}/templates/"* "${USERHOME}/.config/skwd-wall/data/matugen/templates/"
+
+# Eigentümer setzen
+chown -R "${USERNAME}:users" "${USERHOME}/.config/skwd-wall" 2>/dev/null || true
+
+info "skwd-wall Konfiguration eingerichtet."
+
 # ── Fertig ────────────────────────────────────────────────────────────────────
 step "Fertig!"
 echo ""
