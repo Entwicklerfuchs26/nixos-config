@@ -11,7 +11,7 @@
     ./davinci.nix
     ./printing.nix
     ./ollama.nix
-    ./docker.nix
+    ./docker-guest.nix
     ./affinity.nix
     # Bewusst weggelassen: ldap.nix, fuchs-shell.nix, sojus.nix
   ];
